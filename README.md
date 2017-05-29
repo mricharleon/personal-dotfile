@@ -13,6 +13,6 @@ funcionalidades geniales ;)
     - Instalar ctags (Dependencia para plugin tagbar)
     - Instalar cmake (Dependecia para poder compilar el plugin autocomplete)
 
-  ![Tmux](https://cloud.githubusercontent.com/assets/2581366/26532574/8f9cbffa-43c9-11e7-88d5-e2345c2aa02e.png)
+  ![Tmux](https://cloud.githubusercontent.com/assets/2581366/26562304/b91ab834-448a-11e7-964c-40d9f422e681.png)
 
 - ...
