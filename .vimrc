@@ -25,10 +25,12 @@ Plug 'morhetz/gruvbox'
 Plug 'easymotion/vim-easymotion'	" busca y mueve a coincidencias en el texto viible
 Plug 'scrooloose/nerdtree'		" menu lateral
 Plug 'christoomey/vim-tmux-navigator'	" navega con Ctrl entre ventanas de vim
+
 Plug 'mattn/emmet-vim'			" emmet para vim
-" Plug 'Shougo/deoplete.nvim'		" autocompletar TS
-" Plug 'roxma/nvim-yarp'			" autocompletar TS
-" Plug 'roxma/vim-hug-neovim-rpc'		" autocompletar TS
+Plug 'Shougo/deoplete.nvim'		" autocompletar TS
+Plug 'roxma/nvim-yarp'			" autocompletar TS
+
+Plug 'roxma/vim-hug-neovim-rpc'		" autocompletar TS
 Plug 'ryanoasis/vim-devicons'		" iconos en menu
 Plug 'editorconfig/editorconfig-vim'
 Plug 'https://github.com/AndrewRadev/tagalong.vim'
@@ -49,12 +51,20 @@ colorscheme gruvbox
 " NERDTree
 let NERDTreeQuitOnOpen=1
 let NERDTreeShowHidden=1
+let g:NERDTreeDirArrowExpandable = ''
+let g:NERDTreeDirArrowCollapsible = ''
+let NERDTreeWinSize = 40
+
 let g:webdevicons_enable = 1
 let g:webdevicons_enable_nerdtree = 1
 let g:webdevicons_enable_vimfiler = 1
 let g:webdevicons_enable_airline_tabline = 1
 let g:webdevicons_enable_ctrlp = 1
 let g:WebDevIconsUnicodeDecorateFileNodesDefaultSymbol = 'ƛ'
+let g:WebDevIconsUnicodeGlyphDoubleWidth = 0
+let g:WebDevIconsNerdTreeAfterGlyphPadding = ' '
+let g:WebDevIconsTabAirLineAfterGlyphPadding = ''
+let g:WebDevIconsTabAirLineBeforeGlyphPadding = ''
 
 " Emmet
 let g:user_emmet_install_global = 0
