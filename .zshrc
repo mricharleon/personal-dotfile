@@ -16,6 +16,8 @@ alias gitlog='git log --decorate --oneline --all'
 alias after-merge='sh ~/utiles/chck-master-pull-del.sh'
 alias clean-cache='free -hm && sync && echo 3 > /proc/sys/vm/drop_caches && free -hm'
 
+alias chaumon='xset dpms force off'
+
 # Path to your oh-my-zsh installation.
 export ZSH=/home/mricharleon/.oh-my-zsh
 
