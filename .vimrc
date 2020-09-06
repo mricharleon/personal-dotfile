@@ -78,7 +78,7 @@ let g:user_emmet_leader_key='<C-Z>'
 let g:gitgutter_terminal_reports_focus=0
 
 " " nerdtree-git-plugin
-let g:NERDTreeIndicatorMapCustom = {
+let g:NERDTreeGitStatusIndicatorMapCustom = {
     \ "Modified"  : "✹",
     \ "Staged"    : "✚",
     \ "Untracked" : "✭",
