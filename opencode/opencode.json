@@ -1,0 +1,75 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "playwright": {
+      "type": "local",
+      "command": [
+        "npx",
+        "@playwright/mcp@latest"
+      ],
+      "enabled": true
+    },
+    "filesystem": {
+      "type": "local",
+      "command": [
+        "npx",
+        "@modelcontextprotocol/server-filesystem@latest",
+        "/home/kali/development"
+      ],
+      "enabled": true
+    },
+    "context7": {
+      "type": "local",
+      "command": [
+        "npx",
+        "@upstash/context7-mcp@latest"
+      ],
+      "enabled": true
+    }
+  },
+  "provider": {
+    "mtplx_local": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Macbook llama-server",
+      "options": {
+        "baseURL": "http://192.168.1.8:8080/v1",
+        "apiKey": "llamacpp"
+      },
+      "models": {
+        "gemma-4-12b-it-UD-Q8_K_XL.gguf": {
+          "name": "gemma-4-12b-it-UD-Q8_K_XL.gguf",
+          "image": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          }
+        },
+        "gemma-4-12b-it-Q4_K_M.gguf": {
+          "name": "gemma-4-12b-it-Q4_K_M.gguf",
+          "image": true,
+          "modalities": {
+            "input": ["text", "image"],
+            "output": ["text"]
+          }
+        },
+        "Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL": {
+          "name": "Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL",
+          "image": false,
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          }
+        },
+        "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf": {
+	  "name": "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL",
+          "image": false,
+          "modalities": {
+            "input": ["text"],
+            "output": ["text"]
+          }
+	}
+      }
+    }
+  },
+  "model": "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL"
+}
