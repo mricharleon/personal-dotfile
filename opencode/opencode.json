@@ -8,7 +8,10 @@
   "compaction": {
     "auto": true,
     "prune": false,
-    "reserved": 10000
+    "keep": {
+      "tokens": 2000
+    },
+    "buffer": 38000
   },
   "mcp": {
     "playwright": {
