@@ -1,0 +1,20 @@
+node_modules
+package.json
+package-lock.json
+bun.lock
+.gitignore
+
+# Project assets that are binary/large data — not useful as text context
+assets/
+
+# Map style JSON (MapLibre) — large binary data loaded at runtime
+assets/data/map/*.json
+
+# Documentation — loaded on-demand when relevant
+docs/
+
+# Generated/auto-generated files
+.dart_tool/
+.pub/
+.build/
+coverage/
