@@ -2,16 +2,9 @@
   "$schema": "https://opencode.ai/config.json",
   "permission": {
     "external_directory": {
-      "~/.config/opencode/**": "allow"
+      "~/.config/opencode/**": "allow",
+      "/home/kali/macbookpro/**": "allow"
     }
-  },
-  "compaction": {
-    "auto": true,
-    "prune": false,
-    "keep": {
-      "tokens": 2000
-    },
-    "buffer": 38000
   },
   "mcp": {
     "playwright": {
@@ -20,7 +13,7 @@
         "npx",
         "@playwright/mcp@latest"
       ],
-      "enabled": true
+      "enabled": false
     },
     "filesystem": {
       "type": "local",
@@ -38,19 +31,30 @@
         "@upstash/context7-mcp@latest"
       ],
       "enabled": true
+    },
+    "notion": {
+      "type": "local",
+      "command": [
+        "/home/kali/.nvm/versions/node/v20.20.2/bin/npx",
+        "@notionhq/notion-mcp-server"
+      ],
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      },
+      "enabled": false
     }
   },
   "provider": {
-    "mlx": {
+    "mtplx": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "MLX (local)",
+      "name": "MTPLX (local)",
       "options": {
         "baseURL": "http://100.94.207.1:1234/v1",
-        "apiKey": "mlx"
+        "apiKey": "mtplx.129"
       },
       "models": {
-        "qwen3.6-35b-a3B-mlx": {
-          "name": "qwen3.6-35b-a3B-mlx",
+        "Qwen3.6-35B-A3B-MTPLX-Optimized-Speed-FP16": {
+          "name": "Qwen3.6-35B-A3B-MTPLX-Optimized-Speed-FP16",
           "image": true,
           "modalities": {
             "input": [
@@ -72,71 +76,13 @@
         "apiKey": "llamacpp"
       },
       "models": {
-        "gemma-4-12b-it-UD-Q8_K_XL.gguf": {
-          "name": "gemma-4-12b-it-UD-Q8_K_XL.gguf",
-          "image": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        },
-        "gemma-4-12b-it-Q4_K_M.gguf": {
-          "name": "gemma-4-12b-it-Q4_K_M.gguf",
-          "image": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        },
-        "Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL": {
-          "name": "Qwen3.6-27B-MTP-GGUF:UD-Q4_K_XL",
-          "image": false,
-          "modalities": {
-            "input": [
-              "text"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        },
-        "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL.gguf": {
-          "name": "Qwen3-Coder-30B-A3B-Instruct-UD-Q4_K_XL",
-          "image": false,
-          "modalities": {
-            "input": [
-              "text"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        },
-        "Qwen3.6-35B-A3B-UD-Q4_K_M.gguf.gguf": {
-          "name": "Qwen3.6-35B-A3B-UD-Q4_K_M.gguf",
-          "image": false,
-          "modalities": {
-            "input": [
-              "text"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        },
         "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf.gguf": {
           "name": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
           "image": true,
+          "limit": {
+            "context": 53248,
+            "output": 4096
+          },
           "modalities": {
             "input": [
               "text",
@@ -146,14 +92,16 @@
               "text"
             ]
           }
+        },
+        "default": {
+          "maxTokens": 53000
         }
       }
     }
   },
-  "model": "mlx/qwen3.6-35b-a3B-mlx",
-  "plugins": {
-    "opencode-tps": {
-      "enabled": true
-    }
-  }
+  "model": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf.gguf",
+  "plugin": [
+    "@williamcr01/opencode-tps",
+    "@tarquinen/opencode-dcp"
+  ]
 }
