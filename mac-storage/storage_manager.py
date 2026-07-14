@@ -157,7 +157,7 @@ def find_large_files(base: str, min_size: int = 500 * 1024 * 1024, limit: int = 
                 fpath = " ".join(parts[1:])
                 items.append(StorageItem(
                     path=fpath, size=size, category="large_files",
-                    description=f"Large file ({format_bytes(size)})",
+                    description=f"Archivo grande ({format_bytes(size)})",
                     safe_to_delete=False,
                     age_days=int(file_age_days(fpath) or 0)
                 ))
@@ -215,19 +215,19 @@ class Scanner:
         cleanup_meta = {
             "DerivedData": {
                 "action": "rm -rf ~/Library/Developer/Xcode/DerivedData/*",
-                "warning": "Build artifacts will be re-downloaded on next build. Safe to delete.",
+                "warning": "Los artefactos de compilación se volverán a descargar en el próximo build. Seguro de eliminar.",
             },
             "Archives": {
                 "action": "rm -rf ~/Library/Developer/Xcode/Archives/*.xcarchive",
-                "warning": "Archived app bundles for App Store/TestFlight submissions will be removed. Keep if you need to submit updates.",
+                "warning": "Se eliminarán los bundles archivados para App Store/TestFlight. Conservar si se necesitan enviar actualizaciones.",
             },
             "DeviceLogs": {
                 "action": "rm -rf ~/Library/Logs/DiagnosticReports/*",
-                "warning": "Diagnostic and crash logs will be regenerated.",
+                "warning": "Los logs de diagnóstico y crash se regenerarán.",
             },
             "Profiles": {
                 "action": "",
-                "warning": "Provisioning profiles are required for app signing and deployment. Do not delete.",
+                "warning": "Los profiles de aprovisionamiento son necesarios para firmar y desplegar apps. No eliminar.",
             },
         }
         dirs = {
@@ -266,10 +266,10 @@ class Scanner:
                                     r.add(StorageItem(
                                         path=path, size=size,
                                         category="ios_simulators",
-                                        description=f"Simulator: {d.get('name', 'Unknown')}",
+                                        description=f"Simulador: {d.get('name', 'Desconocido')}",
                                         safe_to_delete=True,
                                         cleanup_action=f"xcrun simctl delete {d.get('udid', '')}",
-                                        cleanup_warning="Deleted simulators and their data will be lost. Re-add from Xcode.",
+                                        cleanup_warning="Los simuladores eliminados y sus datos se perderán. Reagregar desde Xcode.",
                                     ))
             except (json.JSONDecodeError, KeyError):
                 pass
@@ -280,34 +280,34 @@ class Scanner:
                 r.add(StorageItem(
                     path=sim_path, size=size,
                     category="ios_simulators",
-                    description="CoreSimulator data",
+                    description="Datos CoreSimulator",
                     safe_to_delete=True,
                     cleanup_action="rm -rf ~/Library/Developer/CoreSimulator/*",
-                    cleanup_warning="All simulator runtime data will be lost. Re-download runtimes from Xcode.",
+                    cleanup_warning="Se perderán todos los datos de runtime de simuladores. Re-descargar desde Xcode.",
                 ))
         return r
 
     def scan_docker(self) -> ScanResult:
         r = ScanResult()
         action_map = {
-            "Images": ("docker image prune -a --force", "All unused images will be removed. Running containers depend on their images."),
-            "Containers": ("docker container prune --force", "All stopped containers will be removed. Data in volumes is preserved."),
-            "Local Volumes": ("docker volume prune --force", "All unused volumes will be removed. Data will be lost."),
-            "Build Cache": ("docker builder prune --force", "Build cache will be cleared. Future builds may take longer."),
-            "tmpfs": ("docker system prune --volumes --force", "tmpfs and dangling data will be removed."),
-            "Proxy Cache": ("docker system prune --all --force", "Cached registry data will be re-fetched on next pull."),
+            "Images": ("docker image prune -a --force", "Todas las imágenes sin usar serán eliminadas. Los contenedores en ejecución dependen de sus imágenes."),
+            "Containers": ("docker container prune --force", "Todos los contenedores detenidos serán eliminados. Los datos en volumes se preservan."),
+            "Local Volumes": ("docker volume prune --force", "Todos los volumes sin usar serán eliminados. Los datos se perderán."),
+            "Build Cache": ("docker builder prune --force", "El cache de compilación será borrado. Las compilaciones futuras pueden tardar más."),
+            "tmpfs": ("docker system prune --volumes --force", "tmpfs y datos colgantes serán eliminados."),
+            "Proxy Cache": ("docker system prune --all --force", "Los datos cache del registro se volverán a obtener en el próximo pull."),
         }
         ok, out = run_cmd(["docker", "system", "df", "-v"])
         if ok:
             try:
                 data = json.loads(out)
                 desc_map = {
-                    "Images": "Docker images",
-                    "Containers": "Docker containers",
-                    "Local Volumes": "Docker volumes",
-                    "Build Cache": "Docker build cache",
-                    "tmpfs": "Docker tmpfs",
-                    "Proxy Cache": "Docker proxy cache",
+                    "Images": "Imágenes Docker",
+                    "Containers": "Contenedores Docker",
+                    "Local Volumes": "Volumes Docker",
+                    "Build Cache": "Cache de compilación Docker",
+                    "tmpfs": "tmpfs Docker",
+                    "Proxy Cache": "Cache proxy Docker",
                 }
                 for k, v in data.items():
                     if isinstance(v, dict) and "TotalSize" in v:
@@ -331,10 +331,10 @@ class Scanner:
                 r.add(StorageItem(
                     path=docker_dir, size=size,
                     category="docker",
-                    description="Docker local files",
+                    description="Archivos locales Docker",
                     safe_to_delete=True,
                     cleanup_action="docker system prune -a --volumes --force",
-                    cleanup_warning="Removes ALL unused Docker data: images, containers, volumes, networks. Dangerous.",
+                    cleanup_warning="Elimina TODOS los datos Docker sin usar: imágenes, contenedores, volumes, redes. Peligroso.",
                 ))
         return r
 
@@ -343,19 +343,19 @@ class Scanner:
         cleanup_meta = {
             "Caches": {
                 "action": "brew cleanup --prune=all && rm -rf ~/Library/Caches/Homebrew",
-                "warning": "Cached downloads and old formula versions will be removed. New downloads needed for reinstall.",
+                "warning": "Se eliminarán descargas cacheadas y versiones antiguas de fórmulas. Necesarias nuevas descargas para reinstalar.",
             },
             "Cask Casks": {
                 "action": "rm -rf ~/Library/Caches/Homebrew/Cask/*",
-                "warning": "Cask installer caches will be removed. Safe to delete.",
+                "warning": "Se eliminarán caches de instaladores de Cask. Seguro de eliminar.",
             },
             "Cask": {
                 "action": "rm -rf ~/Library/Caches/Homebrew/Cask/*",
-                "warning": "Cask installer caches will be removed. Safe to delete.",
+                "warning": "Se eliminarán caches de instaladores de Cask. Seguro de eliminar.",
             },
             "Linked": {
                 "action": "",
-                "warning": "Linked kegs are symlinks to currently installed packages. Do not delete.",
+                "warning": "Los kegs enlazados son enlaces simbólicos a paquetes instalados. No eliminar.",
             },
         }
         dirs = {
@@ -382,67 +382,67 @@ class Scanner:
         cleanup_meta = {
             "npm cache": {
                 "action": "npm cache clean --force",
-                "warning": "npm cache will be re-populated on next install.",
+                "warning": "El cache de npm se repoblará en el próximo install.",
             },
             "yarn cache": {
                 "action": "yarn cache clean",
-                "warning": "Yarn cache will be re-populated on next install.",
+                "warning": "El cache de Yarn se repoblará en el próximo install.",
             },
             "pip cache": {
                 "action": "pip cache purge",
-                "warning": "Downloaded wheel archives will be removed. Re-downloaded on next pip install.",
+                "warning": "Se eliminarán los archives wheel descargados. Se volverán a descargar en el próximo pip install.",
             },
             "pipx cache": {
                 "action": "rm -rf ~/Library/Caches/pipx/*",
-                "warning": "Safe to delete. pipx will re-download on next install.",
+                "warning": "Seguro de eliminar. pipx volverá a descargar en el próximo install.",
             },
             "cargo registry": {
                 "action": "rm -rf ~/.cargo/registry/cache/* && rm -rf ~/.cargo/registry/src/*",
-                "warning": "Downloaded crates will be re-fetched on next cargo build/install.",
+                "warning": "Los crates descargados se volverán a obtener en el próximo cargo build/install.",
             },
             "cargo git": {
                 "action": "rm -rf ~/.cargo/git/db/*",
-                "warning": "Git clone caches for dependencies will be removed. Re-cloned on next build.",
+                "warning": "Se eliminarán los caches de git clone para dependencias. Se reclonarán en el próximo build.",
             },
             "go build cache": {
                 "action": "go clean -cache",
-                "warning": "Go build cache cleared. First rebuild after cleanup will be slower.",
+                "warning": "Cache de compilación de Go borrado. La primera recompilación después de la limpieza será más lenta.",
             },
             "go mod cache": {
                 "action": "go clean -modcache",
-                "warning": "Go module download cache cleared. Re-downloaded on next build.",
+                "warning": "Cache de descargas de módulos Go borrado. Se volverá a descargar en el próximo build.",
             },
             "sbt cache": {
                 "action": "rm -rf ~/Library/Caches/sbt/*",
-                "warning": "sbt Ivy cache cleared. Re-downloaded on next build.",
+                "warning": "Cache Ivy de sbt borrado. Se volverá a descargar en el próximo build.",
             },
             "gradle cache": {
                 "action": "rm -rf ~/.gradle/caches/*",
-                "warning": "Gradle build cache cleared. First build will be slower.",
+                "warning": "Cache de compilación de Gradle borrado. La primera compilación será más lenta.",
             },
             "maven cache": {
                 "action": "mvn dependency:purge-local-repository",
-                "warning": "Local Maven repository artifacts will be re-fetched.",
+                "warning": "Los artefactos del repositorio Maven local se volverán a obtener.",
             },
             "CocoaPods": {
                 "action": "rm -rf ~/Library/Caches/CocoaPods/*",
-                "warning": "Pod download cache cleared. Safe to delete.",
+                "warning": "Cache de descargas de CocoaPods borrado. Seguro de eliminar.",
             },
             "pub cache": {
                 "action": "pub cache clean",
-                "warning": "Dart pub cache cleared. Re-downloaded on next pub get.",
+                "warning": "Cache de Dart pub borrado. Se volverá a descargar en el próximo pub get.",
             },
             "deno cache": {
                 "action": "deno cache --reload",
-                "warning": "Deno remote cache reloaded. Existing cache files safe to remove.",
+                "warning": "Cache remoto de Deno recargado. Los archivos de cache existentes son seguros de eliminar.",
             },
             "bun cache": {
                 "action": "bun install --force",
-                "warning": "Bun install cache cleared.",
+                "warning": "Cache de instalación de Bun borrado.",
             },
             "pnpm": {
                 "action": "pnpm store prune",
-                "warning": "pnpm store pruned. Unused packages removed from store.",
+                "warning": "Tienda pnpm podada. Paquetes sin usar eliminados del store.",
             },
         }
         dirs = {
@@ -482,27 +482,27 @@ class Scanner:
         cleanup_meta = {
             "Flutter": {
                 "action": "flutter clean && flutter pub cache repair",
-                "warning": "Flutter build artifacts and downloaded SDK will be re-fetched.",
+                "warning": "Los artefactos de compilación de Flutter y el SDK descargado se volverán a obtener.",
             },
             "Android SDK": {
                 "action": "",
-                "warning": "Android SDK is required for building Android apps. Do not delete.",
+                "warning": "El SDK de Android es necesario para compilar apps Android. No eliminar.",
             },
             "Android AVD": {
                 "action": "rm -rf ~/Library/Android/sdk/avd/*",
-                "warning": "Android emulator images and data will be lost. Re-create from Android Studio.",
+                "warning": "Las imágenes y datos de emuladores Android se perderán. Recrear desde Android Studio.",
             },
             "JetBrains": {
                 "action": "rm -rf ~/Library/Caches/JetBrains/*",
-                "warning": "IDE caches, indexes, and temporary files will be cleared. Safe to delete. IDEs will rebuild on next launch.",
+                "warning": "Se borrarán caches, índices y archivos temporales de IDEs. Seguro de eliminar. Los IDEs reconstruirán al iniciar.",
             },
             "VSCode extensions": {
                 "action": "",
-                "warning": "VSCode extensions are required. Delete from VSCode UI instead.",
+                "warning": "Las extensiones de VSCode son necesarias. Eliminar desde la interfaz de VSCode.",
             },
             "dart cache": {
                 "action": "rm -rf ~/.dart_server/*",
-                "warning": "Dart analysis server cache cleared. Safe to delete.",
+                "warning": "Cache del servidor de análisis Dart borrado. Seguro de eliminar.",
             },
         }
         dirs = {
@@ -541,10 +541,10 @@ class Scanner:
             for name, size, d in sizes[:20]:
                 r.add(StorageItem(
                     path=str(d), size=size, category="app_caches",
-                    description=f"{name} cache",
+                    description=f"cache de {name}",
                     safe_to_delete=True,
                     cleanup_action=f"rm -rf \"{d}\"",
-                    cleanup_warning=f"Application cache for {name}. Will be regenerated. May need to re-login or re-download content.",
+                    cleanup_warning=f"Cache de la aplicación {name}. Se regenerará. Puede ser necesario volver a iniciar sesión.",
                 ))
         return r
 
@@ -567,15 +567,15 @@ class Scanner:
         cleanup_meta = {
             "System Logs": {
                 "action": "rm -rf ~/Library/Logs/*",
-                "warning": "Application logs will be regenerated. Safe to delete.",
+                "warning": "Los logs de aplicaciones se regenerarán. Seguro de eliminar.",
             },
             "Crash Reports": {
                 "action": "rm -rf ~/Library/Logs/DiagnosticReports/*",
-                "warning": "Crash reports and diagnostic data cleared. Useful if troubleshooting is complete.",
+                "warning": "Reports de crash y datos de diagnóstico borrados. Útil si el troubleshooting está completo.",
             },
             "Temp files": {
                 "action": "rm -rf /tmp/* && rm -rf ~/tmp/*",
-                "warning": "All temp files will be removed. Running apps may be affected.",
+                "warning": "Se eliminarán todos los archivos temporales. Las apps en ejecución pueden verse afectadas.",
             },
         }
         dirs = {
@@ -618,12 +618,56 @@ CATEGORY_LABELS = {
     "xcode": "Xcode",
     "docker": "Docker",
     "homebrew": "Homebrew",
-    "package_managers": "Package Managers",
-    "dev_caches": "Dev Tools Caches",
-    "app_caches": "App Caches",
-    "large_files": "Large Files (>500MB)",
-    "ios_simulators": "iOS Simulators",
-    "logs_temp": "Logs & Temp",
+    "package_managers": "Gestores de Paquetes",
+    "dev_caches": "Caches de Desarrollo",
+    "app_caches": "Caches de Aplicaciones",
+    "large_files": "Archivos Grandes (>500MB)",
+    "ios_simulators": "Simuladores iOS",
+    "logs_temp": "Logs y Temp",
+}
+
+# Spanish UI strings
+UI = {
+    "title": "mac-storage",
+    "subtitle": "Gestor Avanzado de Almacenamiento para Desarrolladores",
+    "disk": "Disco",
+    "used_of": "usado de",
+    "available": "Disponible",
+    "system": "Sistema",
+    "storage_by_category": "Almacenamiento por Categoría",
+    "category": "Categoría",
+    "size": "Tamaño",
+    "items": "Elementos",
+    "share": "Porcentaje",
+    "navigate_select": "↑↓ navegar | Enter seleccionar | a teclas de categoría | D dashboard | Q salir",
+    "category_hint": "↑↓ navegar | Enter abrir | teclas directas | D dashboard | Q salir",
+    "dashboard_hint": "↑↓ navegar categorías | Enter abrir | teclas directas (x, do, ho, pm, dc, ac, lf, is, lt) | Q salir",
+    "cleanup_hint": "↑↓ navegar | espacio seleccionar | a todos | A ninguno | p página- | n página+ | [bold green]C[/] limpieza | [bold]B[/] volver | [bold]Q[/] salir",
+    "goodbye": "¡Hasta luego!",
+    "scanning": "Analizando uso de disco...",
+    "cleaning": "Limpiando...",
+    "cleanup_complete": "Limpieza Completa",
+    "deleted": "Eliminados",
+    "failed": "Fallidos",
+    "freed": "Liberado",
+    "before": "Antes",
+    "after": "Después",
+    "no_items_selected": "No hay elementos seleccionados para limpieza.",
+    "permanently_delete": "Esto eliminará permanentemente los siguientes elementos.",
+    "total_delete": "Total a eliminar:",
+    "cleanup_details": "Detalles de Limpieza",
+    "confirm_delete": "Escribe [bold red]SI[/] para confirmar la eliminación | cualquier otra tecla para cancelar",
+    "no_categories": "No se encontraron categorías.",
+    "no_data": "Sin datos para",
+    "unknown_category": "Categoría desconocida",
+    "selected": "Seleccionado",
+    "page": "página",
+    "and_more": "y más",
+    "yes": "Sí",
+    "no": "No",
+    "dev": "Dev",
+    "app_cache": "cache de",
+    "and": "y",
 }
 
 CATEGORY_ORDER = [
@@ -669,11 +713,12 @@ class StorageManager:
             return "\x03"
 
     def _handle_dashboard_key(self, key: str):
+        visible_cats = [c for c in CATEGORY_ORDER if c in self.results and self.results[c].total_size > 0]
         if key == "q":
-            console.print("[dim]Goodbye![/]")
+            console.print(f"[dim]{UI['goodbye']}[/]")
             sys.exit(0)
         elif key == "\x03":
-            console.print("\n[dim]Goodbye![/]")
+            console.print(f"\n[dim]{UI['goodbye']}[/]")
             sys.exit(0)
         elif key == "\n" or key == "\r":
             self._show_category_list()
@@ -682,6 +727,28 @@ class StorageManager:
             self.view_mode = "dashboard"
             self.current_category = None
             self._show_dashboard()
+        elif key == "\x1b[A":  # UP
+            if visible_cats:
+                self.cat_list_index = max(0, self.cat_list_index - 1)
+                # Open the highlighted category directly
+                cat = visible_cats[self.cat_list_index]
+                self.view_mode = "category"
+                self.current_category = cat
+                self.current_page = 0
+                self.current_item = 0
+                console.clear()
+                self._show_category(cat)
+        elif key == "\x1b[B":  # DOWN
+            if visible_cats:
+                self.cat_list_index = min(len(visible_cats) - 1, self.cat_list_index + 1)
+                # Open the highlighted category directly
+                cat = visible_cats[self.cat_list_index]
+                self.view_mode = "category"
+                self.current_category = cat
+                self.current_page = 0
+                self.current_item = 0
+                console.clear()
+                self._show_category(cat)
 
     def _handle_category_key(self, key: str):
         sr = self.results.get(self.current_category)
@@ -838,17 +905,17 @@ class StorageManager:
             self.current_item = 0
             self._show_category(cat)
         else:
-            console.print(f"[yellow]Unknown category: {key}[/]")
+            console.print(f"[yellow]{UI['unknown_category']}: {key}[/]")
             time.sleep(0.5)
             self._show_category_list()
 
     def _print_header(self):
         console.print()
         console.print(Align.center(
-            Text("mac-storage", style="bold cyan"),
+            Text(UI["title"], style="bold cyan"),
         ))
         console.print(Align.center(
-            Text("Advanced Storage Manager for Developers", style="dim"),
+            Text(UI["subtitle"], style="dim"),
         ))
         console.print()
 
@@ -860,11 +927,11 @@ class StorageManager:
             return
 
         # Build category summary
-        table = Table(title="Storage by Category", box=box.ROUNDED)
-        table.add_column("Category", style="cyan")
-        table.add_column("Size", justify="right", style="white")
-        table.add_column("Items", justify="right", style="dim")
-        table.add_column("Share", justify="center")
+        table = Table(title=UI["storage_by_category"], box=box.ROUNDED)
+        table.add_column(UI["category"], style="cyan")
+        table.add_column(UI["size"], justify="right", style="white")
+        table.add_column(UI["items"], justify="right", style="dim")
+        table.add_column(UI["share"], justify="center")
 
         grand_total = 0
         cat_sizes = []
@@ -907,10 +974,10 @@ class StorageManager:
 
         header_panel = Panel(
             Group(
-                Text(f"Disk: {disk['used']} used of {disk['total']} ({disk['percent']})", style=f"bold {disk_color}"),
-                Text(f"Available: {disk['available']}", style="dim"),
+                Text(f"{UI['disk']}: {disk['used']} {UI['used_of']} {disk['total']} ({disk['percent']})", style=f"bold {disk_color}"),
+                Text(f"{UI['available']}: {disk['available']}", style="dim"),
             ),
-            title="[bold]System[/]",
+            title=f"[bold]{UI['system']}[/]",
             border_style=disk_color,
             padding=(1, 2),
         )
@@ -923,14 +990,14 @@ class StorageManager:
 
         console.print(
             Align.center(
-                Text("Press [bold green]ENTER[/] to explore categories | [bold red]Q[/] quit", style="dim"),
+                Text(UI["dashboard_hint"], style="dim"),
             )
         )
 
     # ---- CATEGORY VIEW ----
     def _show_category(self, category: str):
         if category not in self.results:
-            console.print(f"[red]No data for {category}[/]")
+            console.print(f"[red]{UI['no_data']} {CATEGORY_LABELS.get(category, category)}[/]")
             return
 
         sr = self.results[category]
@@ -952,18 +1019,18 @@ class StorageManager:
         if self.current_item >= len(sr.items):
             self.current_item = len(sr.items) - 1
 
-        table = Table(title=f"{label} ({format_bytes(sr.total_size)} | page {self.current_page + 1}/{total_pages})", box=box.ROUNDED)
-        table.add_column("Key", style="cyan", width=3)
-        table.add_column("Selected", width=3)
-        table.add_column("Description", style="white")
-        table.add_column("Size", justify="right", style="cyan")
-        table.add_column("Safe", justify="center")
-        table.add_column("Path", style="dim")
+        table = Table(title=f"{label} ({format_bytes(sr.total_size)} | {UI['page']} {self.current_page + 1}/{total_pages})", box=box.ROUNDED)
+        table.add_column(UI["category"], style="cyan", width=3)
+        table.add_column(UI["selected"], width=3)
+        table.add_column("Descripción", style="white")
+        table.add_column(UI["size"], justify="right", style="cyan")
+        table.add_column("Seguro", justify="center")
+        table.add_column("Ruta", style="dim")
 
         for i, item in enumerate(page_items):
             idx = start + i
             sel = "[bold green]✓[/]" if item.selected else "[dim]  [/]"
-            safe = "[green]Yes[/]" if item.safe_to_delete else "[red]No[/]"
+            safe = f"[green]{UI['yes']}[/]" if item.safe_to_delete else f"[red]{UI['no']}[/]"
             path_display = item.path
             if len(path_display) > 50:
                 path_display = "..." + path_display[-47:]
@@ -987,14 +1054,14 @@ class StorageManager:
         if selected:
             console.print()
             console.print(Rule(style="yellow"))
-            console.print(Text(f"[bold yellow]Selected: {format_bytes(sum(i.size for i in selected))}[/]", style="yellow"))
+            console.print(Text(f"[bold yellow]{UI['selected']}: {format_bytes(sum(i.size for i in selected))}[/]", style="yellow"))
             for item in selected[:5]:
                 if item.cleanup_action:
                     console.print(Text(f"  [dim]→[/] {item.cleanup_action}", style="dim cyan"))
                 if item.cleanup_warning:
                     console.print(Text(f"  [dim]⚠[/] {item.cleanup_warning}", style="yellow"))
             if len(selected) > 5:
-                console.print(Text(f"  ... and {len(selected) - 5} more", style="dim"))
+                console.print(Text(f"  ... {UI['and']} {len(selected) - 5} {UI['and_more']}", style="dim"))
 
         console.clear()
         self._print_header()
@@ -1002,11 +1069,7 @@ class StorageManager:
         console.print()
         console.print(
             Align.center(
-                Text(
-                    "↑↓ navigate | space select | a all | A none | p page- | n page+ | "
-                    "[bold green]C[/] cleanup | [bold]B[/] back | [bold]Q[/] quit",
-                    style="dim",
-                ),
+                Text(UI["cleanup_hint"], style="dim"),
             )
         )
 
@@ -1019,7 +1082,7 @@ class StorageManager:
                         collected.append(item)
 
         if not collected:
-            console.print("[yellow]No items selected for cleanup.[/]")
+            console.print(f"[yellow]{UI['no_items_selected']}[/]")
             return
 
         total = sum(i.size for i in collected)
@@ -1027,16 +1090,16 @@ class StorageManager:
         self._print_header()
 
         console.print(Panel(
-            Text("This will permanently delete the following items.", style="bold yellow"),
+            Text(UI["permanently_delete"], style="bold yellow"),
             border_style="yellow",
         ))
         console.print()
 
         table = Table(box=box.ROUNDED)
-        table.add_column("Category", style="cyan")
-        table.add_column("Description", style="white")
-        table.add_column("Size", justify="right", style="cyan")
-        table.add_column("Safe", justify="center")
+        table.add_column(UI["category"], style="cyan")
+        table.add_column("Descripción", style="white")
+        table.add_column(UI["size"], justify="right", style="cyan")
+        table.add_column("Seguro", justify="center")
 
         for item in collected:
             safe = "[green]Yes[/]" if item.safe_to_delete else "[red]No[/]"
@@ -1050,7 +1113,7 @@ class StorageManager:
         console.print(table)
         console.print()
         console.print(Panel(
-            f"Total to delete: [bold red]{format_bytes(total)}[/]",
+            f"{UI['total_delete']}: [bold red]{format_bytes(total)}[/]",
             border_style="red",
         ))
         console.print()
@@ -1059,18 +1122,16 @@ class StorageManager:
         any_action = any(i.cleanup_action for i in collected)
         any_warning = any(i.cleanup_warning for i in collected)
         if any_action or any_warning:
-            console.print(Rule("[bold yellow]Cleanup Details[/]", style="yellow"))
+            console.print(Rule(f"[bold yellow]{UI['cleanup_details']}[/]", style="yellow"))
             for item in collected:
-                headers = []
                 if item.cleanup_action:
-                    headers.append(f"[bold cyan]{item.description}[/]")
                     console.print(Text(f"  [bold cyan]→[/] {item.cleanup_action}", style="cyan"))
                 if item.cleanup_warning:
                     console.print(Text(f"  [bold yellow]⚠[/] {item.cleanup_warning}", style="yellow"))
                 console.print()
 
         console.print(Align.center(
-            Text("[bold red]Type YES to confirm deletion | any other key to cancel[/]", style="dim"),
+            Text(UI["confirm_delete"], style="dim"),
         ))
 
     def _perform_cleanup(self):
@@ -1095,12 +1156,12 @@ class StorageManager:
         freed = 0
 
         with Progress(
-            TextColumn("[bold blue]{task.description}[/]"),
+            TextColumn(f"[bold blue]{UI['cleaning']}[/]"),
             BarColumn(),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
             console=console,
         ) as p:
-            task = p.add_task("Cleaning...", total=len(collected))
+            task = p.add_task("", total=len(collected))
             for item in collected:
                 ok, err = safe_delete(item.path)
                 if ok:
@@ -1115,13 +1176,13 @@ class StorageManager:
         console.print()
         console.print(Panel(
             Group(
-                Text(f"Deleted: [bold green]{success_count} items[/]", style="green"),
-                Text(f"Failed: [red]{fail_count}[/]", style="red" if fail_count > 0 else "green"),
-                Text(f"Freed: [bold green]{format_bytes(freed)}[/]"),
-                Text(f"Before: {disk_before.get('available', '?')} available"),
-                Text(f"After:  {disk_after.get('available', '?')} available"),
+                Text(f"{UI['deleted']}: [bold green]{success_count} {UI['items']}[/]", style="green"),
+                Text(f"{UI['failed']}: [red]{fail_count}[/]", style="red" if fail_count > 0 else "green"),
+                Text(f"{UI['freed']}: [bold green]{format_bytes(freed)}[/]"),
+                Text(f"{UI['before']}: {disk_before.get('available', '?')}"),
+                Text(f"{UI['after']}:  {disk_after.get('available', '?')}"),
             ),
-            title="[bold green]Cleanup Complete[/]",
+            title=f"[bold green]{UI['cleanup_complete']}[/]",
             border_style="green",
             padding=(1, 2),
         ))
@@ -1144,7 +1205,7 @@ class StorageManager:
 
         visible_cats = [c for c in CATEGORY_ORDER if c in self.results and self.results[c].total_size > 0]
         if not visible_cats:
-            console.print("[yellow]No categories found.[/]")
+            console.print(f"[yellow]{UI['no_categories']}[/]")
             time.sleep(1)
             console.clear()
             self._show_dashboard()
@@ -1155,11 +1216,11 @@ class StorageManager:
         if self.cat_list_index < 0:
             self.cat_list_index = 0
 
-        table = Table(title="Storage Categories", box=box.ROUNDED)
-        table.add_column("Key", style="cyan", width=3)
-        table.add_column("Category", style="white")
-        table.add_column("Size", justify="right", style="cyan")
-        table.add_column("Items", justify="right", style="dim")
+        table = Table(title=UI["storage_by_category"], box=box.ROUNDED)
+        table.add_column("Tecla", style="cyan", width=3)
+        table.add_column(UI["category"], style="white")
+        table.add_column(UI["size"], justify="right", style="cyan")
+        table.add_column(UI["items"], justify="right", style="dim")
 
         grand_total = sum(sr.total_size for c in visible_cats for sr in [self.results[c]] if sr.total_size > 0)
 
@@ -1180,10 +1241,7 @@ class StorageManager:
         console.print(table)
         console.print()
         console.print(Align.center(
-            Text(
-                "↑↓ navigate | Enter select | a category keys | D dashboard | Q quit",
-                style="dim",
-            ),
+            Text(UI["category_hint"], style="dim"),
         ))
 
         self._handle_category_list_key(self._read_key())
