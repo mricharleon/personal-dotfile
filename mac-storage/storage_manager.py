@@ -104,19 +104,21 @@ def run_cmd(cmd: list, capture: bool = True) -> tuple:
 
 
 def get_disk_usage() -> dict:
-    ok, out = run_cmd(["df", "-h", "/"])
-    if not ok:
+    try:
+        st = os.statvfs("/")
+        total = st.f_blocks * st.f_frsize
+        free = st.f_bfree * st.f_frsize
+        used = total - free
+        avail = st.f_bavail * st.f_frsize
+        pct = (used / total * 100) if total > 0 else 0
+        return {
+            "total": format_bytes(total),
+            "used": format_bytes(used),
+            "available": format_bytes(avail),
+            "percent": f"{pct:.0f}%",
+        }
+    except OSError:
         return {}
-    lines = out.strip().split("\n")
-    if len(lines) < 2:
-        return {}
-    parts = lines[-1].split()
-    return {
-        "total": parts[1] if len(parts) > 1 else "?",
-        "used": parts[2] if len(parts) > 2 else "?",
-        "available": parts[3] if len(parts) > 3 else "?",
-        "percent": parts[4] if len(parts) > 4 else "?",
-    }
 
 
 def dir_size_fast(path: str) -> int:
