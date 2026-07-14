@@ -64,7 +64,7 @@ class StorageItem:
         return getattr(self, '_selected', False)
 
     def toggle(self):
-        self._selected = not self._selected
+        self._selected = not getattr(self, '_selected', False)
 
 
 @dataclass
@@ -1153,7 +1153,7 @@ class StorageManager:
         table = Table(title=f"{label} ({format_bytes(sr.total_size)} | {UI['page']} {self.current_page + 1}/{total_pages})", box=box.ROUNDED)
         table.add_column(UI["category"], style="cyan", width=6)
         table.add_column(UI["selected"], width=6)
-        table.add_column("Descripción", style="bright_white")
+        table.add_column("Descripción", style="cyan")
         table.add_column(UI["size"], justify="right", style="cyan")
         table.add_column("Seguro", justify="center")
         table.add_column("Ruta", style="dim")
@@ -1168,7 +1168,7 @@ class StorageManager:
 
             is_current = (idx == self.current_item)
             key_display = " > " if is_current else "   "
-            desc_style = f"bold white" if is_current else "white"
+            desc_style = f"bold cyan" if is_current else "cyan"
             desc_text = f"[{desc_style}]{item.description}[/]"
 
             table.add_row(
