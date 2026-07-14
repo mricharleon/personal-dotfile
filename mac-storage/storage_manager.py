@@ -208,6 +208,12 @@ class Scanner:
                 "logs_temp": self.scan_logs_temp(),
                 "trash": self.scan_trash(),
                 "system_temp": self.scan_system_temp(),
+                "ios_backups": self.scan_ios_backups(),
+                "app_support": self.scan_app_support(),
+                "downloads": self.scan_downloads(),
+                "applications": self.scan_applications(),
+                "virtual_machines": self.scan_virtual_machines(),
+                "time_machine_snapshots": self.scan_time_machine_snapshots(),
             }
             p.update(task, completed=1)
         return self.results
@@ -723,6 +729,229 @@ class Scanner:
                     ))
         return r
 
+    def scan_ios_backups(self) -> ScanResult:
+        r = ScanResult()
+        backup_base = str(self.home / "Library/Application Support/MobileSync/Backup")
+        if os.path.isdir(backup_base):
+            size = dir_size_fast(backup_base)
+            if size > 50 * 1024 * 1024:
+                r.add(StorageItem(
+                    path=backup_base, size=size, category="ios_backups",
+                    description="Backup iOS completo",
+                    safe_to_delete=True,
+                    cleanup_action=f"rm -rf \"{backup_base}\"/*",
+                    cleanup_warning="Se eliminarán TODOS los backups de dispositivos iOS. No se pueden restaurar.",
+                ))
+        # Also check iTunes-style backups
+        itunes_backup = str(self.home / "Library/Application Support/MobileSync")
+        if os.path.isdir(itunes_backup) and not backup_base.endswith(itunes_backup):
+            size = dir_size_fast(itunes_backup)
+            if size > 50 * 1024 * 1024:
+                r.add(StorageItem(
+                    path=itunes_backup, size=size, category="ios_backups",
+                    description="Backup iTunes iOS",
+                    safe_to_delete=True,
+                    cleanup_action=f"rm -rf \"{itunes_backup}\"",
+                    cleanup_warning="Se eliminarán backups de dispositivos iOS.",
+                ))
+        return r
+
+    def scan_app_support(self) -> ScanResult:
+        r = ScanResult()
+        app_sup = self.home / "Library/Application Support"
+        if os.path.isdir(app_sup):
+            sizes = []
+            for d in app_sup.iterdir():
+                if d.is_dir() and not d.name.startswith("Com.") and not d.name.startswith("."):
+                    size = dir_size_fast(str(d))
+                    if size > 200 * 1024 * 1024:
+                        sizes.append((d.name, size, d))
+            sizes.sort(key=lambda x: x[1], reverse=True)
+            for name, size, d in sizes[:15]:
+                safe = name not in (
+                    "Application Loader",
+                    "Installer",
+                    "Mail",
+                    "Notes",
+                    "AddressBook",
+                )
+                r.add(StorageItem(
+                    path=str(d), size=size, category="app_support",
+                    description=f"App Support: {name}",
+                    safe_to_delete=safe,
+                    cleanup_action=f"rm -rf \"{d}\"",
+                    cleanup_warning=f"Datos de {name}. Puede contener configuraciones, mensajes y archivos locales.",
+                ))
+        return r
+
+    def scan_downloads(self) -> ScanResult:
+        r = ScanResult()
+        dl = self.home / "Downloads"
+        if os.path.isdir(dl):
+            size = dir_size_fast(str(dl))
+            if size > 500 * 1024 * 1024:
+                # Scan for large files
+                skip_dirs = [
+                    str(dl / ".DS_Store"),
+                ]
+                large_items = []
+                for item in dl.rglob("*"):
+                    if item.is_file() and not any(item.match(p) for p in skip_dirs):
+                        try:
+                            fsize = item.stat().st_size
+                            if fsize > 100 * 1024 * 1024:
+                                large_items.append((item, fsize))
+                        except OSError:
+                            continue
+
+                large_items.sort(key=lambda x: x[1], reverse=True)
+                for item, fsize in large_items[:30]:
+                    r.add(StorageItem(
+                        path=str(item), size=fsize, category="downloads",
+                        description=f"Archivo: {item.name}",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{item}\"",
+                        cleanup_warning="Archivo descargado. Asegúrate de no necesitarlo.",
+                    ))
+
+                if not large_items and size > 500 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=str(dl), size=size, category="downloads",
+                        description="Papelera de Downloads",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{dl}\"/*",
+                        cleanup_warning="Se eliminarán todos los archivos en Downloads.",
+                    ))
+        return r
+
+    def scan_applications(self) -> ScanResult:
+        r = ScanResult()
+        app_dirs = [
+            ("/Applications", "/Applications"),
+            (str(self.home) + "/Applications", "~/Applications"),
+        ]
+        for path, label in app_dirs:
+            if os.path.isdir(path):
+                sizes = []
+                for app in Path(path).glob("*.app"):
+                    try:
+                        size = sum(f.stat().st_size for f in app.rglob("*") if f.is_file())
+                        if size > 500 * 1024 * 1024:
+                            sizes.append((app.name, size, app))
+                    except OSError:
+                        continue
+                sizes.sort(key=lambda x: x[1], reverse=True)
+                for name, size, app in sizes[:10]:
+                    r.add(StorageItem(
+                        path=str(app), size=size, category="applications",
+                        description=f"App: {name}",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{app}\"",
+                        cleanup_warning="Se eliminará la aplicación completa. Reinstalar desde App Store o DMG.",
+                    ))
+        return r
+
+    def scan_virtual_machines(self) -> ScanResult:
+        r = ScanResult()
+        vm_paths = [
+            (str(self.home) + "/Virtual Machines", "VMs (home)"),
+            (str(self.home) + "/.Virtual Machines", "VMs (hidden)"),
+            (str(self.home) + "/Library/VirtualMachine", "VM (Library)"),
+            ("/Users/Shared", "Shared VMs"),
+        ]
+        vm_extensions = (".vmwarevm", ".vhdx", ".vdi", ".qcow2", ".vmdk", ".hdd", ".qcow", ".img", ".raw")
+        for path, label in vm_paths:
+            if os.path.isdir(path):
+                for f in Path(path).rglob("*"):
+                    if f.is_file() and f.suffix.lower() in vm_extensions:
+                        size = f.stat().st_size
+                        if size > 1 * 1024 * 1024 * 1024:
+                            r.add(StorageItem(
+                                path=str(f), size=size, category="virtual_machines",
+                                description=f"VM: {f.name}",
+                                safe_to_delete=True,
+                                cleanup_action=f"rm -rf \"{f}\"",
+                                cleanup_warning="Se eliminará el disco de la máquina virtual. Se perderán todos los datos.",
+                            ))
+                    if f.is_dir() and f.suffix.lower() in vm_extensions:
+                        size = dir_size_fast(str(f))
+                        if size > 1 * 1024 * 1024 * 1024:
+                            r.add(StorageItem(
+                                path=str(f), size=size, category="virtual_machines",
+                                description=f"VM: {f.name}",
+                                safe_to_delete=True,
+                                cleanup_action=f"rm -rf \"{f}\"",
+                                cleanup_warning="Se eliminará la máquina virtual completa. Se perderán todos los datos.",
+                            ))
+        # Also check for VMware Fusion VMs in common locations
+        vmware_path = str(self.home) + "/Documents/Virtual Machine"
+        if os.path.isdir(vmware_path):
+            for d in Path(vmware_path).glob("*.vmwarevm"):
+                size = dir_size_fast(str(d))
+                if size > 1 * 1024 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=str(d), size=size, category="virtual_machines",
+                        description=f"VMware: {d.name}",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{d}\"",
+                        cleanup_warning="Se eliminará la máquina virtual VMware completa.",
+                    ))
+        return r
+
+    def scan_time_machine_snapshots(self) -> ScanResult:
+        r = ScanResult()
+        ok, out = run_cmd(["tmutil", "listlocalsnapshots", "/"])
+        if ok and out.strip():
+            try:
+                lines = out.strip().split("\n")
+                if len(lines) > 1:
+                    # First line is the header
+                    for line in lines[1:]:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        # Format: snap_date.compUUID
+                        parts = line.split(".")
+                        if parts:
+                            date_str = parts[0]
+                            # Estimate snapshot size
+                            ok2, size_out = run_cmd(["tmutil", "calcsize", f"/.HDImageStores/{date_str}"])
+                            size_bytes = 0
+                            if ok2:
+                                try:
+                                    size_bytes = int(size_out.strip())
+                                except ValueError:
+                                    pass
+                            if size_bytes > 1 * 1024 * 1024 * 1024:
+                                r.add(StorageItem(
+                                    path=f"/.HDImageStores/{date_str}", size=size_bytes,
+                                    category="time_machine_snapshots",
+                                    description=f"Snapshot: {date_str}",
+                                    safe_to_delete=True,
+                                    cleanup_action=f"tmutil deletelocalsnapshots {date_str}",
+                                    cleanup_warning="Se eliminará el snapshot local. No se puede restaurar.",
+                                ))
+            except (IndexError, ValueError):
+                pass
+        # Also check the snapshot storage directory directly
+        snapshot_dir = "/.HDImageStores"
+        if os.path.isdir(snapshot_dir):
+            for d in Path(snapshot_dir).iterdir():
+                if d.is_dir():
+                    size = dir_size_fast(str(d))
+                    if size > 1 * 1024 * 1024 * 1024:
+                        # Check if already added via tmutil
+                        already = any(i.path == str(d) for i in r.items)
+                        if not already:
+                            r.add(StorageItem(
+                                path=str(d), size=size, category="time_machine_snapshots",
+                                description=f"Snapshot: {d.name}",
+                                safe_to_delete=True,
+                                cleanup_action=f"tmutil deletelocalsnapshots {d.name}",
+                                cleanup_warning="Se eliminará el snapshot local. No se puede restaurar.",
+                            ))
+        return r
+
 
 # ============================================================================
 # CATEGORY METADATA
@@ -740,6 +969,12 @@ CATEGORY_COLORS = {
     "logs_temp": "grey62",
     "trash": "bright_red",
     "system_temp": "grey85",
+    "ios_backups": "bright_cyan",
+    "app_support": "bright_green",
+    "downloads": "yellow",
+    "applications": "bright_yellow",
+    "virtual_machines": "bright_white",
+    "time_machine_snapshots": "bright_red",
 }
 
 CATEGORY_LABELS = {
@@ -754,6 +989,12 @@ CATEGORY_LABELS = {
     "logs_temp": "Logs y Temp",
     "trash": "Papelera",
     "system_temp": "Temporales del Sistema",
+    "ios_backups": "Backups iOS",
+    "app_support": "Application Support",
+    "downloads": "Descargas",
+    "applications": "Aplicaciones",
+    "virtual_machines": "Máquinas Virtuales",
+    "time_machine_snapshots": "Snapshots Time Machine",
 }
 
 # Spanish UI strings
@@ -803,7 +1044,8 @@ UI = {
 CATEGORY_ORDER = [
     "xcode", "docker", "homebrew", "package_managers",
     "dev_caches", "app_caches", "large_files", "ios_simulators", "logs_temp",
-    "trash", "system_temp",
+    "trash", "system_temp", "ios_backups", "app_support", "downloads",
+    "applications", "virtual_machines", "time_machine_snapshots",
 ]
 
 # ============================================================================
