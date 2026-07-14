@@ -216,6 +216,19 @@ class Scanner:
                 "applications": self.scan_applications(),
                 "virtual_machines": self.scan_virtual_machines(),
                 "time_machine_snapshots": self.scan_time_machine_snapshots(),
+                "messages_attachments": self.scan_messages_attachments(),
+                "browser_caches": self.scan_browser_caches(),
+                "font_caches": self.scan_font_caches(),
+                "python_venvs": self.scan_python_venvs(),
+                "zoom_cache": self.scan_zoom_cache(),
+                "slack_cache": self.scan_slack_cache(),
+                "spotify_cache": self.scan_spotify_cache(),
+                "microsoft_office": self.scan_microsoft_office(),
+                "adobe_cache": self.scan_adobe_cache(),
+                "icloud_downloads": self.scan_icloud_downloads(),
+                "go_modules": self.scan_go_modules(),
+                "node_global": self.scan_node_global(),
+                "crash_reports_extended": self.scan_crash_reports_extended(),
             }
             p.update(task, completed=1)
         return self.results
@@ -954,6 +967,308 @@ class Scanner:
                             ))
         return r
 
+    def scan_messages_attachments(self) -> ScanResult:
+        r = ScanResult()
+        # iMessage attachments can accumulate GBs of photos/videos
+        attach_base = str(self.home / "Library/Messages/Attachments")
+        if os.path.isdir(attach_base):
+            size = dir_size_fast(attach_base)
+            if size > 50 * 1024 * 1024:
+                r.add(StorageItem(
+                    path=attach_base, size=size, category="messages_attachments",
+                    description="Adjuntos iMessage",
+                    safe_to_delete=True,
+                    cleanup_action=f"find \"{attach_base}\" -type f -delete 2>/dev/null",
+                    cleanup_warning="Se eliminarán TODOS los adjuntos de iMessage (fotos, videos, archivos). No se pueden restaurar.",
+                ))
+        # Also check MessagesData
+        md = str(self.home / "Library/Messages/MessagesData")
+        if os.path.isdir(md):
+            size = dir_size_fast(md)
+            if size > 50 * 1024 * 1024:
+                r.add(StorageItem(
+                    path=md, size=size, category="messages_attachments",
+                    description="Datos de Mensajes",
+                    safe_to_delete=True,
+                    cleanup_action=f"rm -rf \"{md}\"/*",
+                    cleanup_warning="Datos de Mensajes. Se regenerarán.",
+                ))
+        return r
+
+    def scan_browser_caches(self) -> ScanResult:
+        r = ScanResult()
+        browser_paths = {
+            "Safari": str(self.home / "Library/Caches/com.apple.Safari"),
+            "Chrome": str(self.home / "Library/Caches/Google/Chrome/Default"),
+            "Chrome Legacy": str(self.home / "Library/Caches/Google/Chrome"),
+            "Firefox": str(self.home / "Library/Caches/Mozilla/Firefox"),
+            "Edge": str(self.home / "Library/Caches/Microsoft/Edge"),
+            "Brave": str(self.home / "Library/Caches/BraveSoftware/Brave-Browser"),
+            "Arc": str(self.home / "Library/Caches/com.arc.Arc"),
+        }
+        for name, path in browser_paths.items():
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="browser_caches",
+                        description=f"Cache de {name}",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning=f"Cache de {name}. Las páginas se volverán a cargar. Puede necesitar iniciar sesión.",
+                    ))
+        return r
+
+    def scan_font_caches(self) -> ScanResult:
+        r = ScanResult()
+        font_paths = {
+            "User Font Cache": str(self.home / "Library/Caches/com.apple.fonts"),
+            "System Font Cache": "/Library/Caches/com.apple.fonts",
+        }
+        for name, path in font_paths.items():
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="font_caches",
+                        description=f"Caché de fuentes: {name}",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning="Las cachés de fuentes se regenerarán automáticamente al reiniciar.",
+                    ))
+        return r
+
+    def scan_python_venvs(self) -> ScanResult:
+        r = ScanResult()
+        venv_paths = [
+            ("venv", str(self.home / "venv")),
+            (".venv", str(self.home / ".venv")),
+            (".virtualenvs", str(self.home / ".virtualenvs")),
+            ("virtualenvs", str(self.home / "virtualenvs")),
+            ("env", str(self.home / "env")),
+        ]
+        for name, path in venv_paths:
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 100 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="python_venvs",
+                        description=f"Entorno Python: {name}",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning=f"Se eliminará el entorno virtual {name}. Los paquetes deberán reinstalarse.",
+                    ))
+        # Also check per-project venvs
+        for d in Path(self.home).rglob("venv"):
+            if d.is_dir() and str(d) != str(self.home / "venv") and str(d).count("/") - str(self.home).count("/") < 4:
+                size = dir_size_fast(str(d))
+                if size > 100 * 1024 * 1024 and not any(str(d) == p for _, p in venv_paths):
+                    r.add(StorageItem(
+                        path=str(d), size=size, category="python_venvs",
+                        description=f"venv: {d.parent.name}/venv",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{d}\"",
+                        cleanup_warning="Se eliminará el entorno virtual. Los paquetes deberán reinstalarse.",
+                    ))
+        return r
+
+    def scan_zoom_cache(self) -> ScanResult:
+        r = ScanResult()
+        zoom_paths = {
+            "Zoom Cache": "/Users/Shared/.zoom.us",
+            "Zoom Data": str(self.home / "Library/Application Support/Zoom"),
+        }
+        for name, path in zoom_paths.items():
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="zoom_cache",
+                        description=name,
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning="Se eliminarán caches de Zoom. Las reuniones y configuraciones persisten.",
+                    ))
+        return r
+
+    def scan_slack_cache(self) -> ScanResult:
+        r = ScanResult()
+        slack_paths = [
+            str(self.home / "Library/Application Support/Slack"),
+            str(self.home / "Library/Caches/com.tinyspeck.slackmacgap"),
+        ]
+        for path in slack_paths:
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="slack_cache",
+                        description="Cache de Slack",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning="Se eliminarán caches de Slack. Las conversaciones se volverán a cargar.",
+                    ))
+        return r
+
+    def scan_spotify_cache(self) -> ScanResult:
+        r = ScanResult()
+        spotify_paths = [
+            str(self.home / "Library/Application Support/Com.Spotlight"),
+            str(self.home / "Library/Caches/Spotify"),
+            str(self.home / "Library/Caches/com.spotify.Spotify"),
+        ]
+        for path in spotify_paths:
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="spotify_cache",
+                        description="Cache de Spotify",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning="Se eliminarán las canciones descargadas y caches. Deberán descargarse de nuevo.",
+                    ))
+        return r
+
+    def scan_microsoft_office(self) -> ScanResult:
+        r = ScanResult()
+        office_paths = [
+            str(self.home / "Library/Containers/com.microsoft.Office"),
+            str(self.home / "Library/Application Support/Microsoft"),
+            str(self.home / "Library/Caches/com.microsoft.Office"),
+        ]
+        for path in office_paths:
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="microsoft_office",
+                        description="Cache de Microsoft Office",
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning="Se eliminarán caches de Office. Las plantillas y documentos persisten.",
+                    ))
+        return r
+
+    def scan_adobe_cache(self) -> ScanResult:
+        r = ScanResult()
+        adobe_paths = [
+            str(self.home / "Library/Caches/Adobe"),
+            str(self.home / "Library/Application Support/Adobe"),
+        ]
+        for path in adobe_paths:
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="adobe_cache",
+                        description="Cache de Adobe",
+                        safe_to_delete=False,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning="Datos de aplicaciones Adobe. Puede afectar configuraciones y archivos guardados localmente.",
+                    ))
+        return r
+
+    def scan_icloud_downloads(self) -> ScanResult:
+        r = ScanResult()
+        # iCloud Downloads - cached docs from iCloud Drive
+        icloud_dl = str(self.home / "Library/Mobile Documents/i~cloud~documents")
+        if os.path.isdir(icloud_dl):
+            size = dir_size_fast(icloud_dl)
+            if size > 100 * 1024 * 1024:
+                r.add(StorageItem(
+                    path=icloud_dl, size=size, category="icloud_downloads",
+                    description="Descargas de iCloud",
+                    safe_to_delete=True,
+                    cleanup_action=f"rm -rf \"{icloud_dl}\"/*",
+                    cleanup_warning="Se eliminarán documentos en caché de iCloud Drive. Se volverán a sincronizar.",
+                ))
+        return r
+
+    def scan_go_modules(self) -> ScanResult:
+        r = ScanResult()
+        go_mod_path = str(self.home / "Library/Caches/go-mod")
+        if os.path.isdir(go_mod_path):
+            size = dir_size_fast(go_mod_path)
+            if size > 50 * 1024 * 1024:
+                r.add(StorageItem(
+                    path=go_mod_path, size=size, category="go_modules",
+                    description="Módulos Go descargados",
+                    safe_to_delete=True,
+                    cleanup_action="rm -rf ~/Library/Caches/go-mod/*",
+                    cleanup_warning="Se eliminarán módulos Go descargados. Se volverán a obtener en el próximo build.",
+                ))
+        # Also check GOPATH mod cache
+        gomod = os.environ.get("GOPATH", str(self.home / "go"))
+        gomod_path = os.path.join(gomod, "pkg/mod")
+        if os.path.isdir(gomod_path):
+            size = dir_size_fast(gomod_path)
+            if size > 50 * 1024 * 1024:
+                r.add(StorageItem(
+                    path=gomod_path, size=size, category="go_modules",
+                    description="Módulos Go (GOPATH)",
+                    safe_to_delete=True,
+                    cleanup_action=f"rm -rf \"{gomod_path}\"/*",
+                    cleanup_warning="Se eliminarán módulos Go descargados. Se volverán a obtener en el próximo build.",
+                ))
+        return r
+
+    def scan_node_global(self) -> ScanResult:
+        r = ScanResult()
+        # Check global node_modules
+        global_paths = [
+            str(self.home / ".nvm/versions/node/*/lib/node_modules"),
+            "/usr/local/lib/node_modules",
+            "/usr/lib/node_modules",
+            str(self.home / "lib/node_modules"),
+        ]
+        for path in global_paths:
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="node_global",
+                        description="Paquetes npm globales",
+                        safe_to_delete=False,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning="Se eliminarán paquetes npm globales. Deberán reinstalarse con npm install -g.",
+                    ))
+        # Check nvm global
+        nvm_path = str(self.home / ".nvm")
+        if os.path.isdir(nvm_path):
+            for d in Path(nvm_path).rglob("node_modules"):
+                if d.is_dir() and str(d).count("/") - str(self.home).count("/") < 4:
+                    size = dir_size_fast(str(d))
+                    if size > 50 * 1024 * 1024:
+                        r.add(StorageItem(
+                            path=str(d), size=size, category="node_global",
+                            description=f"node_modules: {d.parent.name}",
+                            safe_to_delete=False,
+                            cleanup_action=f"rm -rf \"{d}\"",
+                            cleanup_warning="Se eliminará node_modules. Deberá reinstalarse.",
+                        ))
+        return r
+
+    def scan_crash_reports_extended(self) -> ScanResult:
+        r = ScanResult()
+        crash_paths = {
+            "Kernel Reports": str(self.home / "Library/Logs/DiagnosticReports/kernel_*"),
+            "Crash Reports": str(self.home / "Library/Logs/DiagnosticReports"),
+            "System Reports": "/Library/Logs/DiagnosticReports",
+        }
+        for name, path in crash_paths.items():
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    r.add(StorageItem(
+                        path=path, size=size, category="crash_reports_extended",
+                        description=name,
+                        safe_to_delete=True,
+                        cleanup_action=f"rm -rf \"{path}\"/*",
+                        cleanup_warning="Reports de crash y diagnóstico. Útiles para debugging, pero consumen espacio.",
+                    ))
+        return r
+
 
 # ============================================================================
 # CATEGORY METADATA
@@ -977,6 +1292,19 @@ CATEGORY_COLORS = {
     "applications": "bright_yellow",
     "virtual_machines": "bright_white",
     "time_machine_snapshots": "bright_red",
+    "messages_attachments": "bright_yellow",
+    "browser_caches": "blue",
+    "font_caches": "grey70",
+    "python_venvs": "green",
+    "zoom_cache": "red",
+    "slack_cache": "magenta",
+    "spotify_cache": "green",
+    "microsoft_office": "blue",
+    "adobe_cache": "red",
+    "icloud_downloads": "blue",
+    "go_modules": "cyan",
+    "node_global": "yellow",
+    "crash_reports_extended": "grey50",
 }
 
 CATEGORY_LABELS = {
@@ -997,6 +1325,19 @@ CATEGORY_LABELS = {
     "applications": "Aplicaciones",
     "virtual_machines": "Máquinas Virtuales",
     "time_machine_snapshots": "Snapshots Time Machine",
+    "messages_attachments": "Adjuntos iMessage",
+    "browser_caches": "Caches de Navegadores",
+    "font_caches": "Caches de Fuentes",
+    "python_venvs": "Entornos Python",
+    "zoom_cache": "Cache Zoom",
+    "slack_cache": "Cache Slack",
+    "spotify_cache": "Cache Spotify",
+    "microsoft_office": "Microsoft Office",
+    "adobe_cache": "Adobe",
+    "icloud_downloads": "Descargas iCloud",
+    "go_modules": "Módulos Go",
+    "node_global": "Paquetes npm Globales",
+    "crash_reports_extended": "Reports de Crash",
 }
 
 # Spanish UI strings
@@ -1029,7 +1370,7 @@ UI = {
     "permanently_delete": "Esto eliminará permanentemente los siguientes elementos.",
     "total_delete": "Total a eliminar:",
     "cleanup_details": "Detalles de Limpieza",
-    "confirm_delete": "Escribe [bold red]SI[/] para confirmar la eliminación | cualquier otra tecla para cancelar",
+    "confirm_delete": "Escribe SI para confirmar la eliminación | cualquier otra tecla para cancelar",
     "no_categories": "No se encontraron categorías.",
     "no_data": "Sin datos para",
     "unknown_category": "Categoría desconocida",
@@ -1048,6 +1389,10 @@ CATEGORY_ORDER = [
     "dev_caches", "app_caches", "large_files", "ios_simulators", "logs_temp",
     "trash", "system_temp", "ios_backups", "app_support", "downloads",
     "applications", "virtual_machines", "time_machine_snapshots",
+    "messages_attachments", "browser_caches", "font_caches",
+    "python_venvs", "zoom_cache", "slack_cache", "spotify_cache",
+    "microsoft_office", "adobe_cache", "icloud_downloads",
+    "go_modules", "node_global", "crash_reports_extended",
 ]
 
 # ============================================================================
@@ -1305,7 +1650,7 @@ class StorageManager:
         table.add_column(UI["category"], style="cyan")
         table.add_column(UI["size"], justify="right", style="bold cyan")
         table.add_column(UI["items"], justify="right", style="dim")
-        table.add_column(UI["share"], justify="center")
+        table.add_column(UI["share"], justify="left")
 
         grand_total = 0
         cat_sizes = []
@@ -1508,7 +1853,11 @@ class StorageManager:
                 console.print()
 
         console.print(Align.center(
-            Text(f"[yellow]{UI['confirm_delete']}[/]  [bold red]Y/n[/]", style="dim"),
+            Text.assemble(
+                (UI['confirm_delete'], "yellow"),
+                "  ",
+                ("Y/n", "bold red"),
+            ),
         ))
 
         # Wait for confirmation
