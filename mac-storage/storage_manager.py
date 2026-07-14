@@ -927,7 +927,9 @@ class StorageManager:
 
         # Regular key shortcuts
         if key == "c":  # Cleanup
-            self._perform_cleanup()
+            collected, total = self._show_cleanup_preview()
+            if collected:
+                self._perform_cleanup(collected, total)
             self.view_mode = "dashboard"
             self.current_category = None
             self.current_item = 0
@@ -1262,21 +1264,23 @@ class StorageManager:
                 console.print()
 
         console.print(Align.center(
-            Text(UI["confirm_delete"], style="dim"),
+            Text(f"[yellow]{UI['confirm_delete']}[/]  [bold red]Y/n[/]", style="dim"),
         ))
 
-    def _perform_cleanup(self):
-        collected = []
-        for cat in CATEGORY_ORDER:
-            if cat in self.results:
-                for item in self.results[cat].items:
-                    if item.selected:
-                        collected.append(item)
+        # Wait for confirmation
+        console.print()
+        while True:
+            key = readchar.readchar()
+            if key in ("y", "Y"):
+                return collected, total
+            if key in ("n", "N", "\r", "\n", "\x03"):
+                return None, None
+            # Ignore other keys
 
+    def _perform_cleanup(self, collected, total):
         if not collected:
             return
 
-        total = sum(i.size for i in collected)
         disk_before = get_disk_usage()
 
         console.clear()
@@ -1285,6 +1289,7 @@ class StorageManager:
         success_count = 0
         fail_count = 0
         freed = 0
+        deleted_paths = set()
 
         with Progress(
             TextColumn(f"[bold blue]{UI['cleaning']}[/]"),
@@ -1298,10 +1303,16 @@ class StorageManager:
                 if ok:
                     success_count += 1
                     freed += item.size
+                    deleted_paths.add(item.path)
                 else:
                     fail_count += 1
                     console.print(f"  [red]✗ Failed: {item.path} - {err}[/]")
                 p.update(task, advance=1)
+
+        for cat in CATEGORY_ORDER:
+            if cat in self.results:
+                self.results[cat].items = [i for i in self.results[cat].items if i.path not in deleted_paths]
+                self.results[cat].total_size = sum(i.size for i in self.results[cat].items)
 
         disk_after = get_disk_usage()
         console.print()
