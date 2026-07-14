@@ -31,8 +31,9 @@ try:
     from rich import box
     from rich.align import Align
     from rich.rule import Rule
+    import readchar
 except ImportError:
-    print("ERROR: rich required. Install with: pip install rich")
+    print("ERROR: rich and readchar required. Install with: pip install -r requirements.txt")
     sys.exit(1)
 
 console = Console()
@@ -640,9 +641,11 @@ class StorageManager:
         self.results: dict = {}
         self.current_category = None
         self.current_page = 0
+        self.current_item = 0
         self.page_size = 15
         self.view_mode = "dashboard"  # dashboard | category | cleanup
         self.selected_items = []
+        self.cat_list_index = 0
 
     def run(self):
         self._print_header()
@@ -658,6 +661,186 @@ class StorageManager:
 
         self._show_dashboard()
         self._main_loop()
+
+    def _read_key(self) -> str:
+        try:
+            return readchar.readkey()
+        except (KeyboardInterrupt, EOFError):
+            return "\x03"
+
+    def _handle_dashboard_key(self, key: str):
+        if key == "q":
+            console.print("[dim]Goodbye![/]")
+            sys.exit(0)
+        elif key == "\x03":
+            console.print("\n[dim]Goodbye![/]")
+            sys.exit(0)
+        elif key == "\n" or key == "\r":
+            self._show_category_list()
+        elif key == "b" or key == "d":
+            console.clear()
+            self.view_mode = "dashboard"
+            self.current_category = None
+            self._show_dashboard()
+
+    def _handle_category_key(self, key: str):
+        sr = self.results.get(self.current_category)
+        if not sr:
+            return
+
+        total_pages = (len(sr.items) + self.page_size - 1) // self.page_size
+
+        # Arrow keys for navigation
+        if key == "\x1b[A":  # UP
+            if self.current_item < 0:
+                self.current_item = 0
+            self.current_item -= 1
+            # Auto-page up
+            if self.current_item < self.current_page * self.page_size:
+                self.current_page = max(0, self.current_page - 1)
+                self.current_item = min(0, self.current_page * self.page_size - 1)
+            self._show_category(self.current_category)
+            return
+        elif key == "\x1b[B":  # DOWN
+            self.current_item += 1
+            max_item = len(sr.items) - 1
+            if self.current_item > max_item:
+                self.current_item = max_item
+            # Auto-page down
+            if self.current_item >= (self.current_page + 1) * self.page_size:
+                self.current_page = min(total_pages - 1, self.current_page + 1)
+            self._show_category(self.current_category)
+            return
+
+        # Space to toggle selected item
+        if key == " ":
+            items = sr.items
+            if 0 <= self.current_item < len(items):
+                items[self.current_item].toggle()
+            self._show_category(self.current_category)
+            return
+
+        # Page navigation
+        if key == "\x1b[C":  # RIGHT / n
+            self.current_page = min(total_pages - 1, self.current_page + 1)
+            self.current_item = self.current_page * self.page_size
+            self._show_category(self.current_category)
+            return
+        if key == "\x1b[D":  # LEFT / p
+            self.current_page = max(0, self.current_page - 1)
+            self.current_item = self.current_page * self.page_size
+            self._show_category(self.current_category)
+            return
+
+        # Regular key shortcuts
+        if key == "c":  # Cleanup
+            self._perform_cleanup()
+            self.view_mode = "dashboard"
+            self.current_category = None
+            self.current_item = 0
+            self.current_page = 0
+            console.clear()
+            self._show_dashboard()
+            return
+        elif key == "b":  # Back
+            self.view_mode = "dashboard"
+            self.current_category = None
+            self.current_item = 0
+            self.current_page = 0
+            console.clear()
+            self._show_dashboard()
+            return
+        elif key == "d":  # Dashboard
+            self.view_mode = "dashboard"
+            self.current_category = None
+            self.current_item = 0
+            self.current_page = 0
+            console.clear()
+            self._show_dashboard()
+            return
+        elif key == "a":  # Select all
+            for item in sr.items:
+                item.toggle()
+            self._show_category(self.current_category)
+            return
+        elif key == "A":  # Deselect all
+            for item in sr.items:
+                if item.selected:
+                    item.toggle()
+            self._show_category(self.current_category)
+            return
+        elif key == "q":
+            console.print("[dim]Goodbye![/]")
+            sys.exit(0)
+
+    def _handle_category_list_key(self, key: str):
+        if key == "q":
+            console.print("[dim]Goodbye![/]")
+            sys.exit(0)
+        elif key == "\x03":
+            console.print("\n[dim]Goodbye![/]")
+            sys.exit(0)
+        elif key == "b" or key == "d":
+            console.clear()
+            self.view_mode = "dashboard"
+            self.current_category = None
+            self._show_dashboard()
+            return
+        elif key == "\x1b[A":  # UP
+            self.cat_list_index = max(0, self.cat_list_index - 1)
+            self._show_category_list()
+            return
+        elif key == "\x1b[B":  # DOWN
+            visible_cats = [c for c in CATEGORY_ORDER if c in self.results and self.results[c].total_size > 0]
+            self.cat_list_index = min(len(visible_cats) - 1, self.cat_list_index + 1)
+            self._show_category_list()
+            return
+
+        # Enter to select
+        if key == "\n" or key == "\r":
+            visible_cats = [c for c in CATEGORY_ORDER if c in self.results and self.results[c].total_size > 0]
+            if 0 <= self.cat_list_index < len(visible_cats):
+                cat = visible_cats[self.cat_list_index]
+                self.view_mode = "category"
+                self.current_category = cat
+                self.current_page = 0
+                self.current_item = 0
+                self._show_category(cat)
+            return
+
+        # Direct category key mapping
+        key_map = {
+            "x": "xcode", "xd": "xcode", "xd": "xcode",
+            "do": "docker",
+            "ho": "homebrew",
+            "pm": "package_managers", "package": "package_managers",
+            "dc": "dev_caches", "dev": "dev_caches",
+            "ac": "app_caches", "app": "app_caches",
+            "lf": "large_files", "large": "large_files",
+            "is": "ios_simulators", "sim": "ios_simulators",
+            "lt": "logs_temp", "log": "logs_temp",
+        }
+
+        # Try prefix matching first
+        cat = None
+        for c in CATEGORY_ORDER:
+            if key == c or key == c[:3]:
+                cat = c
+                break
+
+        if not cat:
+            cat = key_map.get(key)
+
+        if cat and cat in self.results and self.results[cat].total_size > 0:
+            self.view_mode = "category"
+            self.current_category = cat
+            self.current_page = 0
+            self.current_item = 0
+            self._show_category(cat)
+        else:
+            console.print(f"[yellow]Unknown category: {key}[/]")
+            time.sleep(0.5)
+            self._show_category_list()
 
     def _print_header(self):
         console.print()
@@ -763,8 +946,14 @@ class StorageManager:
         color = CATEGORY_COLORS.get(category, "white")
         label = CATEGORY_LABELS.get(category, category)
 
+        # Ensure current_item is in valid range
+        if self.current_item < 0:
+            self.current_item = 0
+        if self.current_item >= len(sr.items):
+            self.current_item = len(sr.items) - 1
+
         table = Table(title=f"{label} ({format_bytes(sr.total_size)} | page {self.current_page + 1}/{total_pages})", box=box.ROUNDED)
-        table.add_column("#", style="dim", width=3)
+        table.add_column("Key", style="cyan", width=3)
         table.add_column("Selected", width=3)
         table.add_column("Description", style="white")
         table.add_column("Size", justify="right", style="cyan")
@@ -778,10 +967,16 @@ class StorageManager:
             path_display = item.path
             if len(path_display) > 50:
                 path_display = "..." + path_display[-47:]
+
+            is_current = (idx == self.current_item)
+            key_display = " > " if is_current else "   "
+            desc_style = f"bold white" if is_current else "white"
+            desc_text = f"[{desc_style}]{item.description}[/]"
+
             table.add_row(
-                str(idx + 1),
+                f"[bold cyan]{key_display}{idx + 1}[/]",
                 sel,
-                item.description,
+                desc_text,
                 item.size_human,
                 safe,
                 path_display,
@@ -935,78 +1130,30 @@ class StorageManager:
     # ---- MAIN LOOP ----
     def _main_loop(self):
         while True:
-            try:
-                key = console.input("[bold cyan]> [/]")
-            except (KeyboardInterrupt, EOFError):
-                console.print("\n[dim]Goodbye![/]")
-                break
+            key = self._read_key()
+            key_raw = key
 
-            key = key.strip().lower()
-
-            if key == "q":
-                console.print("[dim]Goodbye![/]")
-                break
-
-            if key == "":
-                # Show category list
-                self._show_category_list()
-                continue
-
-            if key == "b" and self.view_mode != "dashboard":
-                self.view_mode = "dashboard"
-                self.current_category = None
-                console.clear()
-                self._show_dashboard()
-                continue
-
-            if key == "d":
-                console.clear()
-                self.view_mode = "dashboard"
-                self.current_category = None
-                self._show_dashboard()
-                continue
-
-            # Category navigation
-            if self.view_mode == "category":
-                if key == "n":
-                    self.current_page += 1
-                    self._show_category(self.current_category)
-                elif key == "p":
-                    self.current_page = max(0, self.current_page - 1)
-                    self._show_category(self.current_category)
-                elif key == "a":
-                    if self.current_category in self.results:
-                        for item in self.results[self.current_category].items:
-                            item.toggle()
-                    self._show_category(self.current_category)
-                elif key == "A":
-                    if self.current_category in self.results:
-                        for item in self.results[self.current_category].items:
-                            if item.selected:
-                                item.toggle()
-                    self._show_category(self.current_category)
-                elif key == "c":
-                    self._perform_cleanup()
-                    self.view_mode = "dashboard"
-                    self.current_category = None
-                    console.clear()
-                    self._show_dashboard()
-                else:
-                    # Try to select by number
-                    try:
-                        num = int(key)
-                        if self.current_category in self.results:
-                            items = self.results[self.current_category].items
-                            if 1 <= num <= len(items):
-                                items[num - 1].toggle()
-                                self._show_category(self.current_category)
-                    except ValueError:
-                        pass
-                continue
+            if self.view_mode == "dashboard":
+                self._handle_dashboard_key(key_raw)
+            elif self.view_mode == "category":
+                self._handle_category_key(key_raw)
 
     def _show_category_list(self):
         console.clear()
         self._print_header()
+
+        visible_cats = [c for c in CATEGORY_ORDER if c in self.results and self.results[c].total_size > 0]
+        if not visible_cats:
+            console.print("[yellow]No categories found.[/]")
+            time.sleep(1)
+            console.clear()
+            self._show_dashboard()
+            return
+
+        if self.cat_list_index >= len(visible_cats):
+            self.cat_list_index = len(visible_cats) - 1
+        if self.cat_list_index < 0:
+            self.cat_list_index = 0
 
         table = Table(title="Storage Categories", box=box.ROUNDED)
         table.add_column("Key", style="cyan", width=3)
@@ -1014,21 +1161,17 @@ class StorageManager:
         table.add_column("Size", justify="right", style="cyan")
         table.add_column("Items", justify="right", style="dim")
 
-        grand_total = 0
-        cat_data = []
-        for cat in CATEGORY_ORDER:
-            if cat in self.results:
-                sr = self.results[cat]
-                if sr.total_size > 0:
-                    grand_total += sr.total_size
-                    cat_data.append((cat, sr.total_size, len(sr.items)))
+        grand_total = sum(sr.total_size for c in visible_cats for sr in [self.results[c]] if sr.total_size > 0)
 
-        cat_data.sort(key=lambda x: x[1], reverse=True)
-
-        for cat, size, count in cat_data:
+        for i, cat in enumerate(visible_cats):
+            sr = self.results[cat]
+            size = sr.total_size
+            count = len(sr.items)
             color = CATEGORY_COLORS.get(cat, "white")
+            selected_marker = " > " if i == self.cat_list_index else "   "
+            row_style = f"bold {color}" if i == self.cat_list_index else color
             table.add_row(
-                f"[bold {color}]{cat[:2].upper()}[/]",
+                f"[bold {row_style}]{selected_marker}{cat[:2].upper()}[/]",
                 CATEGORY_LABELS.get(cat, cat),
                 format_bytes(size),
                 str(count),
@@ -1038,61 +1181,12 @@ class StorageManager:
         console.print()
         console.print(Align.center(
             Text(
-                "Press category key to explore | [bold]D[/] dashboard | [bold]Q[/] quit",
+                "↑↓ navigate | Enter select | a category keys | D dashboard | Q quit",
                 style="dim",
             ),
         ))
 
-        # Wait for key press
-        try:
-            key = console.input("[bold cyan]> [/]").strip().lower()
-        except (KeyboardInterrupt, EOFError):
-            key = "q"
-
-        if key == "q":
-            console.print("[dim]Goodbye![/]")
-            return
-        elif key == "d":
-            console.clear()
-            self._show_dashboard()
-            return
-
-        # Map key to category
-        key_map = {
-            "x": "xcode", "do": "docker", "ho": "homebrew", "pm": "package_managers",
-            "dc": "dev_caches", "ac": "app_caches", "lf": "large_files",
-            "is": "ios_simulators", "lt": "logs_temp",
-            "xd": "xcode", "docker": "docker", "homebrew": "homebrew",
-            "package": "package_managers", "dev": "dev_caches", "app": "app_caches",
-            "large": "large_files", "sim": "ios_simulators", "log": "logs_temp",
-        }
-
-        # Direct match first
-        cat = None
-        for c in CATEGORY_ORDER:
-            if key == c or key == c[:3]:
-                cat = c
-                break
-
-        if not cat:
-            # Try prefix matching
-            matches = [c for c in CATEGORY_ORDER if c.startswith(key) or key in key_map and key_map[key] == c]
-            if len(matches) == 1:
-                cat = matches[0]
-            elif len(matches) > 1:
-                console.print(f"[yellow]Multiple matches: {', '.join(matches)}[/]")
-                return
-
-        if cat:
-            self.view_mode = "category"
-            self.current_category = cat
-            self.current_page = 0
-            self._show_category(cat)
-        else:
-            console.print(f"[yellow]Unknown category: {key}[/]")
-            time.sleep(1)
-            console.clear()
-            self._show_dashboard()
+        self._handle_category_list_key(self._read_key())
 
 
 def main():
