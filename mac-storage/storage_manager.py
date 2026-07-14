@@ -772,7 +772,7 @@ UI = {
     "navigate_select": "↑↓ navegar | Enter seleccionar | teclas directas (x, do, ho, pm, dc, ac, lf, is, lt, tr, st) | D dashboard | Q salir",
     "category_hint": "↑↓ navegar | Enter abrir | teclas directas (x, do, ho, pm, dc, ac, lf, is, lt, tr, st) | D dashboard | Q salir",
     "dashboard_hint": "↑↓ navegar | Enter abrir | teclas directas (x, do, ho, pm, dc, ac, lf, is, lt, tr, st) | Q salir",
-    "cleanup_hint": "↑↓ navegar | espacio seleccionar | a todos | A ninguno | p página- | n página+ | [bold green]C[/] limpiar seleccionados | [bold]B[/] volver al panel | [bold]Q[/] salir",
+    "cleanup_hint": "↑↓ navegar | espacio seleccionar | a todos | A ninguno | p página- | n página+ | C = limpiar | B = volver | Q = salir",
     "goodbye": "¡Hasta luego!",
     "scanning": "Analizando uso de disco...",
     "cleaning": "Limpiando...",
@@ -1151,9 +1151,9 @@ class StorageManager:
             self.current_item = len(sr.items) - 1
 
         table = Table(title=f"{label} ({format_bytes(sr.total_size)} | {UI['page']} {self.current_page + 1}/{total_pages})", box=box.ROUNDED)
-        table.add_column(UI["category"], style="cyan", width=3)
-        table.add_column(UI["selected"], width=3)
-        table.add_column("Descripción", style="white")
+        table.add_column(UI["category"], style="cyan", width=6)
+        table.add_column(UI["selected"], width=6)
+        table.add_column("Descripción", style="bright_white")
         table.add_column(UI["size"], justify="right", style="cyan")
         table.add_column("Seguro", justify="center")
         table.add_column("Ruta", style="dim")
