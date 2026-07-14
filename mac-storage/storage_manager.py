@@ -1516,8 +1516,9 @@ class StorageManager:
 
         # Regular key shortcuts
         if key == "c":  # Cleanup
-            collected, total = self._show_cleanup_confirm()
-            if collected:
+            result = self._show_cleanup_confirm()
+            if result is not None:
+                collected, total = result
                 self._perform_cleanup(collected, total)
             self.view_mode = "dashboard"
             self.current_category = None
