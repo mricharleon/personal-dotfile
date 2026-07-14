@@ -51,6 +51,8 @@ class StorageItem:
     safe_to_delete: bool = True
     files_count: int = 0
     age_days: Optional[int] = None
+    cleanup_action: str = ""
+    cleanup_warning: str = ""
 
     @property
     def size_human(self) -> str:
@@ -209,6 +211,24 @@ class Scanner:
 
     def scan_xcode(self) -> ScanResult:
         r = ScanResult()
+        cleanup_meta = {
+            "DerivedData": {
+                "action": "rm -rf ~/Library/Developer/Xcode/DerivedData/*",
+                "warning": "Build artifacts will be re-downloaded on next build. Safe to delete.",
+            },
+            "Archives": {
+                "action": "rm -rf ~/Library/Developer/Xcode/Archives/*.xcarchive",
+                "warning": "Archived app bundles for App Store/TestFlight submissions will be removed. Keep if you need to submit updates.",
+            },
+            "DeviceLogs": {
+                "action": "rm -rf ~/Library/Logs/DiagnosticReports/*",
+                "warning": "Diagnostic and crash logs will be regenerated.",
+            },
+            "Profiles": {
+                "action": "",
+                "warning": "Provisioning profiles are required for app signing and deployment. Do not delete.",
+            },
+        }
         dirs = {
             "DerivedData": str(self.home / "Library/Developer/Xcode/DerivedData"),
             "Archives": str(self.home / "Library/Developer/Xcode/Archives"),
@@ -219,10 +239,13 @@ class Scanner:
             if os.path.isdir(path):
                 size = dir_size_fast(path)
                 if size > 10 * 1024 * 1024:
+                    meta = cleanup_meta.get(name, {})
                     r.add(StorageItem(
                         path=path, size=size, category="xcode",
                         description=f"Xcode {name}",
-                        safe_to_delete=name != "Profiles"
+                        safe_to_delete=name != "Profiles",
+                        cleanup_action=meta.get("action", ""),
+                        cleanup_warning=meta.get("warning", ""),
                     ))
         return r
 
@@ -243,7 +266,9 @@ class Scanner:
                                         path=path, size=size,
                                         category="ios_simulators",
                                         description=f"Simulator: {d.get('name', 'Unknown')}",
-                                        safe_to_delete=True
+                                        safe_to_delete=True,
+                                        cleanup_action=f"xcrun simctl delete {d.get('udid', '')}",
+                                        cleanup_warning="Deleted simulators and their data will be lost. Re-add from Xcode.",
                                     ))
             except (json.JSONDecodeError, KeyError):
                 pass
@@ -255,12 +280,22 @@ class Scanner:
                     path=sim_path, size=size,
                     category="ios_simulators",
                     description="CoreSimulator data",
-                    safe_to_delete=True
+                    safe_to_delete=True,
+                    cleanup_action="rm -rf ~/Library/Developer/CoreSimulator/*",
+                    cleanup_warning="All simulator runtime data will be lost. Re-download runtimes from Xcode.",
                 ))
         return r
 
     def scan_docker(self) -> ScanResult:
         r = ScanResult()
+        action_map = {
+            "Images": ("docker image prune -a --force", "All unused images will be removed. Running containers depend on their images."),
+            "Containers": ("docker container prune --force", "All stopped containers will be removed. Data in volumes is preserved."),
+            "Local Volumes": ("docker volume prune --force", "All unused volumes will be removed. Data will be lost."),
+            "Build Cache": ("docker builder prune --force", "Build cache will be cleared. Future builds may take longer."),
+            "tmpfs": ("docker system prune --volumes --force", "tmpfs and dangling data will be removed."),
+            "Proxy Cache": ("docker system prune --all --force", "Cached registry data will be re-fetched on next pull."),
+        }
         ok, out = run_cmd(["docker", "system", "df", "-v"])
         if ok:
             try:
@@ -277,11 +312,14 @@ class Scanner:
                     if isinstance(v, dict) and "TotalSize" in v:
                         size = v.get("TotalSize", 0) or 0
                         if size > 10 * 1024 * 1024:
+                            meta = action_map.get(k, ("", ""))
                             r.add(StorageItem(
                                 path="docker://", size=size,
                                 category="docker",
                                 description=desc_map.get(k, f"Docker {k}"),
-                                safe_to_delete=True
+                                safe_to_delete=True,
+                                cleanup_action=meta[0],
+                                cleanup_warning=meta[1],
                             ))
             except (json.JSONDecodeError, KeyError):
                 pass
@@ -293,12 +331,32 @@ class Scanner:
                     path=docker_dir, size=size,
                     category="docker",
                     description="Docker local files",
-                    safe_to_delete=True
+                    safe_to_delete=True,
+                    cleanup_action="docker system prune -a --volumes --force",
+                    cleanup_warning="Removes ALL unused Docker data: images, containers, volumes, networks. Dangerous.",
                 ))
         return r
 
     def scan_homebrew(self) -> ScanResult:
         r = ScanResult()
+        cleanup_meta = {
+            "Caches": {
+                "action": "brew cleanup --prune=all && rm -rf ~/Library/Caches/Homebrew",
+                "warning": "Cached downloads and old formula versions will be removed. New downloads needed for reinstall.",
+            },
+            "Cask Casks": {
+                "action": "rm -rf ~/Library/Caches/Homebrew/Cask/*",
+                "warning": "Cask installer caches will be removed. Safe to delete.",
+            },
+            "Cask": {
+                "action": "rm -rf ~/Library/Caches/Homebrew/Cask/*",
+                "warning": "Cask installer caches will be removed. Safe to delete.",
+            },
+            "Linked": {
+                "action": "",
+                "warning": "Linked kegs are symlinks to currently installed packages. Do not delete.",
+            },
+        }
         dirs = {
             "Caches": str(self.home / "Library/Caches/Homebrew"),
             "Cask Caches": str(self.home / "Library/Caches/Homebrew/Cask"),
@@ -308,15 +366,84 @@ class Scanner:
             if os.path.isdir(path):
                 size = dir_size_fast(path)
                 if size > 10 * 1024 * 1024:
+                    meta = cleanup_meta.get(name, {})
                     r.add(StorageItem(
                         path=path, size=size, category="homebrew",
                         description=f"Homebrew {name}",
-                        safe_to_delete=name != "Linked"
+                        safe_to_delete=name != "Linked",
+                        cleanup_action=meta.get("action", ""),
+                        cleanup_warning=meta.get("warning", ""),
                     ))
         return r
 
     def scan_package_managers(self) -> ScanResult:
         r = ScanResult()
+        cleanup_meta = {
+            "npm cache": {
+                "action": "npm cache clean --force",
+                "warning": "npm cache will be re-populated on next install.",
+            },
+            "yarn cache": {
+                "action": "yarn cache clean",
+                "warning": "Yarn cache will be re-populated on next install.",
+            },
+            "pip cache": {
+                "action": "pip cache purge",
+                "warning": "Downloaded wheel archives will be removed. Re-downloaded on next pip install.",
+            },
+            "pipx cache": {
+                "action": "rm -rf ~/Library/Caches/pipx/*",
+                "warning": "Safe to delete. pipx will re-download on next install.",
+            },
+            "cargo registry": {
+                "action": "rm -rf ~/.cargo/registry/cache/* && rm -rf ~/.cargo/registry/src/*",
+                "warning": "Downloaded crates will be re-fetched on next cargo build/install.",
+            },
+            "cargo git": {
+                "action": "rm -rf ~/.cargo/git/db/*",
+                "warning": "Git clone caches for dependencies will be removed. Re-cloned on next build.",
+            },
+            "go build cache": {
+                "action": "go clean -cache",
+                "warning": "Go build cache cleared. First rebuild after cleanup will be slower.",
+            },
+            "go mod cache": {
+                "action": "go clean -modcache",
+                "warning": "Go module download cache cleared. Re-downloaded on next build.",
+            },
+            "sbt cache": {
+                "action": "rm -rf ~/Library/Caches/sbt/*",
+                "warning": "sbt Ivy cache cleared. Re-downloaded on next build.",
+            },
+            "gradle cache": {
+                "action": "rm -rf ~/.gradle/caches/*",
+                "warning": "Gradle build cache cleared. First build will be slower.",
+            },
+            "maven cache": {
+                "action": "mvn dependency:purge-local-repository",
+                "warning": "Local Maven repository artifacts will be re-fetched.",
+            },
+            "CocoaPods": {
+                "action": "rm -rf ~/Library/Caches/CocoaPods/*",
+                "warning": "Pod download cache cleared. Safe to delete.",
+            },
+            "pub cache": {
+                "action": "pub cache clean",
+                "warning": "Dart pub cache cleared. Re-downloaded on next pub get.",
+            },
+            "deno cache": {
+                "action": "deno cache --reload",
+                "warning": "Deno remote cache reloaded. Existing cache files safe to remove.",
+            },
+            "bun cache": {
+                "action": "bun install --force",
+                "warning": "Bun install cache cleared.",
+            },
+            "pnpm": {
+                "action": "pnpm store prune",
+                "warning": "pnpm store pruned. Unused packages removed from store.",
+            },
+        }
         dirs = {
             "npm cache": str(self.home / "Library/Caches/npm"),
             "yarn cache": str(self.home / "Library/Caches/yarn"),
@@ -339,15 +466,44 @@ class Scanner:
             if os.path.isdir(path):
                 size = dir_size_fast(path)
                 if size > 50 * 1024 * 1024:
+                    meta = cleanup_meta.get(name, {})
                     r.add(StorageItem(
                         path=path, size=size, category="package_managers",
                         description=f"{name}",
-                        safe_to_delete=True
+                        safe_to_delete=True,
+                        cleanup_action=meta.get("action", ""),
+                        cleanup_warning=meta.get("warning", ""),
                     ))
         return r
 
     def scan_dev_caches(self) -> ScanResult:
         r = ScanResult()
+        cleanup_meta = {
+            "Flutter": {
+                "action": "flutter clean && flutter pub cache repair",
+                "warning": "Flutter build artifacts and downloaded SDK will be re-fetched.",
+            },
+            "Android SDK": {
+                "action": "",
+                "warning": "Android SDK is required for building Android apps. Do not delete.",
+            },
+            "Android AVD": {
+                "action": "rm -rf ~/Library/Android/sdk/avd/*",
+                "warning": "Android emulator images and data will be lost. Re-create from Android Studio.",
+            },
+            "JetBrains": {
+                "action": "rm -rf ~/Library/Caches/JetBrains/*",
+                "warning": "IDE caches, indexes, and temporary files will be cleared. Safe to delete. IDEs will rebuild on next launch.",
+            },
+            "VSCode extensions": {
+                "action": "",
+                "warning": "VSCode extensions are required. Delete from VSCode UI instead.",
+            },
+            "dart cache": {
+                "action": "rm -rf ~/.dart_server/*",
+                "warning": "Dart analysis server cache cleared. Safe to delete.",
+            },
+        }
         dirs = {
             "Flutter": str(self.home / "Library/Caches/flutter"),
             "Android SDK": str(self.home / "Library/Android/sdk"),
@@ -360,10 +516,13 @@ class Scanner:
             if os.path.isdir(path):
                 size = dir_size_fast(path)
                 if size > 100 * 1024 * 1024:
+                    meta = cleanup_meta.get(name, {})
                     r.add(StorageItem(
                         path=path, size=size, category="dev_caches",
                         description=f"Dev: {name}",
-                        safe_to_delete=name not in ("Android SDK", "Android AVD")
+                        safe_to_delete=name not in ("Android SDK", "Android AVD"),
+                        cleanup_action=meta.get("action", ""),
+                        cleanup_warning=meta.get("warning", ""),
                     ))
         return r
 
@@ -382,7 +541,9 @@ class Scanner:
                 r.add(StorageItem(
                     path=str(d), size=size, category="app_caches",
                     description=f"{name} cache",
-                    safe_to_delete=True
+                    safe_to_delete=True,
+                    cleanup_action=f"rm -rf \"{d}\"",
+                    cleanup_warning=f"Application cache for {name}. Will be regenerated. May need to re-login or re-download content.",
                 ))
         return r
 
@@ -402,6 +563,20 @@ class Scanner:
 
     def scan_logs_temp(self) -> ScanResult:
         r = ScanResult()
+        cleanup_meta = {
+            "System Logs": {
+                "action": "rm -rf ~/Library/Logs/*",
+                "warning": "Application logs will be regenerated. Safe to delete.",
+            },
+            "Crash Reports": {
+                "action": "rm -rf ~/Library/Logs/DiagnosticReports/*",
+                "warning": "Crash reports and diagnostic data cleared. Useful if troubleshooting is complete.",
+            },
+            "Temp files": {
+                "action": "rm -rf /tmp/* && rm -rf ~/tmp/*",
+                "warning": "All temp files will be removed. Running apps may be affected.",
+            },
+        }
         dirs = {
             "System Logs": str(self.home / "Library/Logs"),
             "Crash Reports": str(self.home / "Library/Logs/DiagnosticReports"),
@@ -411,10 +586,13 @@ class Scanner:
             if os.path.isdir(path):
                 size = dir_size_fast(path)
                 if size > 50 * 1024 * 1024:
+                    meta = cleanup_meta.get(name, {})
                     r.add(StorageItem(
                         path=path, size=size, category="logs_temp",
                         description=name,
-                        safe_to_delete=True
+                        safe_to_delete=True,
+                        cleanup_action=meta.get("action", ""),
+                        cleanup_warning=meta.get("warning", ""),
                     ))
         return r
 
@@ -609,6 +787,20 @@ class StorageManager:
                 path_display,
             )
 
+        # Show cleanup action hint for selected items
+        selected = [i for i in sr.items if i.selected]
+        if selected:
+            console.print()
+            console.print(Rule(style="yellow"))
+            console.print(Text(f"[bold yellow]Selected: {format_bytes(sum(i.size for i in selected))}[/]", style="yellow"))
+            for item in selected[:5]:
+                if item.cleanup_action:
+                    console.print(Text(f"  [dim]→[/] {item.cleanup_action}", style="dim cyan"))
+                if item.cleanup_warning:
+                    console.print(Text(f"  [dim]⚠[/] {item.cleanup_warning}", style="yellow"))
+            if len(selected) > 5:
+                console.print(Text(f"  ... and {len(selected) - 5} more", style="dim"))
+
         console.clear()
         self._print_header()
         console.print(table)
@@ -667,6 +859,21 @@ class StorageManager:
             border_style="red",
         ))
         console.print()
+
+        # Show cleanup actions and warnings
+        any_action = any(i.cleanup_action for i in collected)
+        any_warning = any(i.cleanup_warning for i in collected)
+        if any_action or any_warning:
+            console.print(Rule("[bold yellow]Cleanup Details[/]", style="yellow"))
+            for item in collected:
+                headers = []
+                if item.cleanup_action:
+                    headers.append(f"[bold cyan]{item.description}[/]")
+                    console.print(Text(f"  [bold cyan]→[/] {item.cleanup_action}", style="cyan"))
+                if item.cleanup_warning:
+                    console.print(Text(f"  [bold yellow]⚠[/] {item.cleanup_warning}", style="yellow"))
+                console.print()
+
         console.print(Align.center(
             Text("[bold red]Type YES to confirm deletion | any other key to cancel[/]", style="dim"),
         ))
