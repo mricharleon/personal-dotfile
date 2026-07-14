@@ -484,7 +484,7 @@ class StorageManager:
     def _print_header(self):
         console.print()
         console.print(Align.center(
-            Text("mac-storage", style="bold cyan", font="mono"),
+            Text("mac-storage", style="bold cyan"),
         ))
         console.print(Align.center(
             Text("Advanced Storage Manager for Developers", style="dim"),
