@@ -7,8 +7,9 @@
   "compress": {
     "mode": "range",
     "showCompression": true,
-    "maxContextLimit": 53248,
+    "maxContextLimit": 53344,
     "minContextLimit": 34600,
-    "summaryBuffer": true
+    "summaryBuffer": true,
+    "nudgeFrequency": 15
   }
 }

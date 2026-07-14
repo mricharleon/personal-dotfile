@@ -80,8 +80,12 @@
           "name": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
           "image": true,
           "limit": {
-            "context": 53248,
+            "context": 53344,
             "output": 4096
+          },
+          "cost": {
+            "input": 0.50,
+            "output": 3.00
           },
           "modalities": {
             "input": [
@@ -101,7 +105,6 @@
   },
   "model": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf.gguf",
   "plugin": [
-    "@williamcr01/opencode-tps",
     "@tarquinen/opencode-dcp"
   ]
 }
