@@ -1151,8 +1151,8 @@ class StorageManager:
             self.current_item = len(sr.items) - 1
 
         table = Table(title=f"{label} ({format_bytes(sr.total_size)} | {UI['page']} {self.current_page + 1}/{total_pages})", box=box.ROUNDED)
-        table.add_column(UI["category"], style="cyan", width=6)
-        table.add_column(UI["selected"], width=6)
+        table.add_column(UI["category"], style="cyan", width=16)
+        table.add_column(UI["selected"], width=16)
         table.add_column("Descripción", style="cyan")
         table.add_column(UI["size"], justify="right", style="cyan")
         table.add_column("Seguro", justify="center")
