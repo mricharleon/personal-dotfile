@@ -206,6 +206,8 @@ class Scanner:
                 "large_files": self.scan_large_files(),
                 "ios_simulators": self.scan_ios_simulators(),
                 "logs_temp": self.scan_logs_temp(),
+                "trash": self.scan_trash(),
+                "system_temp": self.scan_system_temp(),
             }
             p.update(task, completed=1)
         return self.results
@@ -597,6 +599,130 @@ class Scanner:
                     ))
         return r
 
+    def scan_trash(self) -> ScanResult:
+        r = ScanResult()
+        cleanup_meta = {
+            "Trash": {
+                "action": "rm -rf ~/.Trash/*",
+                "warning": "Se eliminarán permanentemente todos los archivos en la Papelera. Esta acción no se puede deshacer.",
+            },
+            "Trash (user)": {
+                "action": "rm -rf ~/.Trash/*",
+                "warning": "Se eliminarán permanentemente todos los archivos en la Papelera. Esta acción no se puede deshacer.",
+            },
+        }
+        trash_paths = {
+            "Trash": str(self.home / ".Trash"),
+        }
+        for name, path in trash_paths.items():
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 10 * 1024 * 1024:
+                    meta = cleanup_meta.get(name, {})
+                    r.add(StorageItem(
+                        path=path, size=size, category="trash",
+                        description="Papelera del sistema",
+                        safe_to_delete=True,
+                        cleanup_action=meta.get("action", ""),
+                        cleanup_warning=meta.get("warning", ""),
+                    ))
+        return r
+
+    def scan_system_temp(self) -> ScanResult:
+        r = ScanResult()
+        cleanup_meta = {
+            "/tmp": {
+                "action": "rm -rf /tmp/*",
+                "warning": "Se eliminarán todos los archivos temporales del sistema. Las apps en ejecución pueden verse afectadas.",
+            },
+            "/private/tmp": {
+                "action": "rm -rf /private/tmp/*",
+                "warning": "Se eliminarán todos los archivos temporales del sistema. Las apps en ejecución pueden verse afectadas.",
+            },
+            "~/tmp": {
+                "action": "rm -rf ~/tmp/*",
+                "warning": "Se eliminarán todos los archivos temporales del usuario. Las apps en ejecución pueden verse afectadas.",
+            },
+            "ASAuthorization": {
+                "action": "rm -rf ~/Library/Caches/com.apple.AuthBrokerAgent/*",
+                "warning": "Se eliminarán caches de autenticación. Puede ser necesario volver a iniciar sesión en aplicaciones.",
+            },
+            "Spotlight": {
+                "action": "",
+                "warning": "Los índices de Spotlight se regenerarán automáticamente. No eliminar manualmente.",
+            },
+            "CoreLocation": {
+                "action": "rm -rf ~/Library/Caches/com.apple.LaunchServices-*.lstore2",
+                "warning": "Se eliminarán caches de ubicación. Las apps de ubicación se regenerarán.",
+            },
+            "WiFi": {
+                "action": "rm -rf ~/Library/Caches/com.apple.wifiwizard*/",
+                "warning": "Se eliminarán caches de redes WiFi. Las redes guardadas persisten.",
+            },
+            "AddressBook": {
+                "action": "rm -rf ~/Library/Caches/com.apple.AddressBook/*",
+                "warning": "Se eliminarán caches de contactos. Se regenerarán al reiniciar Contactos.",
+            },
+            "Mail": {
+                "action": "rm -rf ~/Library/Mail/V*/MailData/EDPushNotificationToken",
+                "warning": "Se eliminarán caches de Mail. Los correos descargados se regenerarán.",
+            },
+            "QuickLook": {
+                "action": "rm -rf ~/Library/Caches/com.apple.QuickLook/*",
+                "warning": "Se eliminarán previews de Quick Look. Se regenerarán al previsualizar archivos.",
+            },
+            "Finder": {
+                "action": "rm -rf ~/Library/Caches/com.apple.finder/*",
+                "warning": "Se eliminarán caches de Finder. El Finder se reiniciará automáticamente.",
+            },
+            "iTunes": {
+                "action": "rm -rf ~/Library/Caches/com.apple.iTunes/*",
+                "warning": "Se eliminarán caches de iTunes. Se regenerarán al reiniciar iTunes.",
+            },
+            "Safari": {
+                "action": "rm -rf ~/Library/Caches/com.apple.Safari/*",
+                "warning": "Se eliminarán caches de Safari. Las páginas web se volverán a cargar.",
+            },
+            "Chrome": {
+                "action": "rm -rf ~/Library/Caches/Google/Chrome/Default/*",
+                "warning": "Se eliminarán caches de Chrome. Las páginas web se volverán a cargar.",
+            },
+            "Firefox": {
+                "action": "rm -rf ~/Library/Caches/Mozilla/Firefox/*",
+                "warning": "Se eliminarán caches de Firefox. Las páginas web se volverán a cargar.",
+            },
+        }
+        dirs = {
+            "/tmp": "/tmp",
+            "/private/tmp": "/private/tmp",
+            "~/tmp": str(self.home / "tmp"),
+            "ASAuthorization": str(self.home / "Library/Caches/com.apple.AuthBrokerAgent"),
+            "Spotlight": str(self.home / "Library/Caches/com.apple.Spotlight"),
+            "CoreLocation": str(self.home / "Library/Caches/com.apple.CoreLocation"),
+            "WiFi": str(self.home / "Library/Caches/com.apple.wifiwizard"),
+            "AddressBook": str(self.home / "Library/Caches/com.apple.AddressBook"),
+            "Mail": str(self.home / "Library/Mail/V*"),
+            "QuickLook": str(self.home / "Library/Caches/com.apple.QuickLook"),
+            "Finder": str(self.home / "Library/Caches/com.apple.finder"),
+            "iTunes": str(self.home / "Library/Caches/com.apple.iTunes"),
+            "Safari": str(self.home / "Library/Caches/com.apple.Safari"),
+            "Chrome": str(self.home / "Library/Caches/Google/Chrome/Default"),
+            "Firefox": str(self.home / "Library/Caches/Mozilla/Firefox"),
+        }
+        for name, path in dirs.items():
+            if os.path.isdir(path):
+                size = dir_size_fast(path)
+                if size > 50 * 1024 * 1024:
+                    meta = cleanup_meta.get(name, {})
+                    r.add(StorageItem(
+                        path=path, size=size, category="system_temp",
+                        description=f"Temp: {name}",
+                        safe_to_delete=True,
+                        cleanup_action=meta.get("action", ""),
+                        cleanup_warning=meta.get("warning", ""),
+                    ))
+        return r
+
 
 # ============================================================================
 # CATEGORY METADATA
@@ -612,6 +738,8 @@ CATEGORY_COLORS = {
     "large_files": "white",
     "ios_simulators": "bright_magenta",
     "logs_temp": "grey62",
+    "trash": "bright_red",
+    "system_temp": "grey85",
 }
 
 CATEGORY_LABELS = {
@@ -624,6 +752,8 @@ CATEGORY_LABELS = {
     "large_files": "Archivos Grandes (>500MB)",
     "ios_simulators": "Simuladores iOS",
     "logs_temp": "Logs y Temp",
+    "trash": "Papelera",
+    "system_temp": "Temporales del Sistema",
 }
 
 # Spanish UI strings
@@ -639,10 +769,10 @@ UI = {
     "size": "Tamaño",
     "items": "Elementos",
     "share": "Porcentaje",
-    "navigate_select": "↑↓ navegar | Enter seleccionar | a teclas de categoría | D dashboard | Q salir",
-    "category_hint": "↑↓ navegar | Enter abrir | teclas directas | D dashboard | Q salir",
-    "dashboard_hint": "↑↓ navegar categorías | Enter abrir | teclas directas (x, do, ho, pm, dc, ac, lf, is, lt) | Q salir",
-    "cleanup_hint": "↑↓ navegar | espacio seleccionar | a todos | A ninguno | p página- | n página+ | [bold green]C[/] limpieza | [bold]B[/] volver | [bold]Q[/] salir",
+    "navigate_select": "↑↓ navegar | Enter seleccionar | teclas directas (x, do, ho, pm, dc, ac, lf, is, lt, tr, st) | D dashboard | Q salir",
+    "category_hint": "↑↓ navegar | Enter abrir | teclas directas (x, do, ho, pm, dc, ac, lf, is, lt, tr, st) | D dashboard | Q salir",
+    "dashboard_hint": "↑↓ navegar | Enter abrir | teclas directas (x, do, ho, pm, dc, ac, lf, is, lt, tr, st) | Q salir",
+    "cleanup_hint": "↑↓ navegar | espacio seleccionar | a todos | A ninguno | p página- | n página+ | [bold green]C[/] limpiar seleccionados | [bold]B[/] volver al panel | [bold]Q[/] salir",
     "goodbye": "¡Hasta luego!",
     "scanning": "Analizando uso de disco...",
     "cleaning": "Limpiando...",
@@ -673,6 +803,7 @@ UI = {
 CATEGORY_ORDER = [
     "xcode", "docker", "homebrew", "package_managers",
     "dev_caches", "app_caches", "large_files", "ios_simulators", "logs_temp",
+    "trash", "system_temp",
 ]
 
 # ============================================================================
@@ -721,7 +852,14 @@ class StorageManager:
             console.print(f"\n[dim]{UI['goodbye']}[/]")
             sys.exit(0)
         elif key == "\n" or key == "\r":
-            self._show_category_list()
+            if visible_cats:
+                cat = visible_cats[self.cat_list_index]
+                self.view_mode = "category"
+                self.current_category = cat
+                self.current_page = 0
+                self.current_item = 0
+                console.clear()
+                self._show_category(cat)
         elif key == "b" or key == "d":
             console.clear()
             self.view_mode = "dashboard"
@@ -730,25 +868,13 @@ class StorageManager:
         elif key == "\x1b[A":  # UP
             if visible_cats:
                 self.cat_list_index = max(0, self.cat_list_index - 1)
-                # Open the highlighted category directly
-                cat = visible_cats[self.cat_list_index]
-                self.view_mode = "category"
-                self.current_category = cat
-                self.current_page = 0
-                self.current_item = 0
                 console.clear()
-                self._show_category(cat)
+                self._show_dashboard()
         elif key == "\x1b[B":  # DOWN
             if visible_cats:
                 self.cat_list_index = min(len(visible_cats) - 1, self.cat_list_index + 1)
-                # Open the highlighted category directly
-                cat = visible_cats[self.cat_list_index]
-                self.view_mode = "category"
-                self.current_category = cat
-                self.current_page = 0
-                self.current_item = 0
                 console.clear()
-                self._show_category(cat)
+                self._show_dashboard()
 
     def _handle_category_key(self, key: str):
         sr = self.results.get(self.current_category)
@@ -886,6 +1012,8 @@ class StorageManager:
             "lf": "large_files", "large": "large_files",
             "is": "ios_simulators", "sim": "ios_simulators",
             "lt": "logs_temp", "log": "logs_temp",
+            "tr": "trash",
+            "st": "system_temp",
         }
 
         # Try prefix matching first
@@ -929,7 +1057,7 @@ class StorageManager:
         # Build category summary
         table = Table(title=UI["storage_by_category"], box=box.ROUNDED)
         table.add_column(UI["category"], style="cyan")
-        table.add_column(UI["size"], justify="right", style="white")
+        table.add_column(UI["size"], justify="right", style="bold cyan")
         table.add_column(UI["items"], justify="right", style="dim")
         table.add_column(UI["share"], justify="center")
 
@@ -944,13 +1072,16 @@ class StorageManager:
 
         cat_sizes.sort(key=lambda x: x[1], reverse=True)
 
-        for cat, size, count in cat_sizes:
+        for i, (cat, size, count) in enumerate(cat_sizes):
             pct = (size / grand_total * 100) if grand_total > 0 else 0
             bar = "#" * int(pct / 2)
             color = CATEGORY_COLORS.get(cat, "white")
+            is_selected = (i == self.cat_list_index)
+            marker = " > " if is_selected else "   "
+            cat_style = f"bold {color}" if is_selected else color
             table.add_row(
-                f"[bold {color}]{CATEGORY_LABELS.get(cat, cat)}[/]",
-                f"[bold white]{format_bytes(size)}[/]",
+                f"[{cat_style}]{marker}{CATEGORY_LABELS.get(cat, cat)}[/]",
+                f"[bold cyan]{format_bytes(size)}[/]",
                 str(count),
                 f"[{color}]{bar} {pct:.0f}%[/]",
             )
