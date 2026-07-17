@@ -39,7 +39,7 @@
         "@notionhq/notion-mcp-server"
       ],
       "env": {
-        "NOTION_API_KEY": "${NOTION_API_KEY}"
+        "NOTION_API_KEY": "{env:NOTION_API_KEY}"
       },
       "enabled": false
     }
@@ -101,8 +101,8 @@
           "name": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
           "image": true,
           "limit": {
-            "context": 57000,
-            "output": 4096
+            "context": 57344,
+            "output": 8192
           },
           "cost": {
             "input": 0.5,
