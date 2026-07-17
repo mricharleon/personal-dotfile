@@ -3,7 +3,8 @@
   "permission": {
     "external_directory": {
       "~/.config/opencode/**": "allow",
-      "/home/kali/macbookpro/**": "allow"
+      "/home/kali/macbookpro/**": "allow",
+      "/home/kali/**": "allow"
     }
   },
   "mcp": {
@@ -45,50 +46,6 @@
     }
   },
   "provider": {
-    "mtplx": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "MTPLX (local)",
-      "options": {
-        "baseURL": "http://100.94.207.1:1234/v1",
-        "apiKey": "mtplx.129"
-      },
-      "models": {
-        "Qwen3.6-35B-A3B-MTPLX-Optimized-Speed-FP16": {
-          "name": "Qwen3.6-35B-A3B-MTPLX-Optimized-Speed-FP16",
-          "image": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        }
-      }
-    },
-    "mac-bonsai": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ternary Bonsai (MacBook Pro)",
-      "options": {
-        "baseURL": "http://100.94.207.1:8080/v1",
-        "apiKey": "none"
-      },
-      "models": {
-        "prism-ml/Ternary-Bonsai-27B-Q2_0": {
-          "name": "Ternary-Bonsai-27B-Q2_0",
-          "modalities": {
-            "input": [
-              "text"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        }
-      }
-    },
     "llama-server": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "Macbook llama-server",
