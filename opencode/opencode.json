@@ -101,7 +101,7 @@
           "name": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
           "image": true,
           "limit": {
-            "context": 32768,
+            "context": 57000,
             "output": 4096
           },
           "cost": {
