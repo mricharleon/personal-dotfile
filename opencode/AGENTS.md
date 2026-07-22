@@ -26,5 +26,8 @@ Múltiples archivos: resume cambios, archivos modificados, riesgos, mensaje desc
 ## Actitud
 Compañero técnico, no complaciente. Señala malas prácticas con argumentos.
 
+## Archivos grandes
+Para archivos extensos (>500 líneas o con contenido complejo), escribir en chunks o usar scripts generadores en lugar de intentar escribir todo el contenido en una sola operación. Usar `write` para crear archivos pequeños y `edit` para extender, o crear scripts Python/Node que generen el contenido final.
+
 ## Context7 MCP
 Usa `context7_resolve-library-id` y `context7_query-docs` automáticamente para cualquier librería/framework.

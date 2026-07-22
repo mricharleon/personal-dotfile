@@ -50,7 +50,7 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "Macbook llama-server",
       "options": {
-        "baseURL": "http://100.94.207.1:8080/v1",
+        "baseURL": "http://192.168.2.138:8080/v1",
         "apiKey": "llamacpp"
       },
       "models": {
@@ -58,8 +58,8 @@
           "name": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
           "image": true,
           "limit": {
-            "context": 57344,
-            "output": 8192
+            "context": 65536,
+            "output": 16384
           },
           "cost": {
             "input": 0.5,
@@ -76,7 +76,7 @@
           }
         },
         "default": {
-          "maxTokens": 30000
+          "maxTokens": 32768
         }
       }
     }
