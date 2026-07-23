@@ -1,5 +1,13 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "keep": {
+      "tokens": 2000
+    },
+    "buffer": 10000
+  },
   "permission": {
     "external_directory": {
       "~/.config/opencode/**": "allow",
@@ -46,6 +54,22 @@
     }
   },
   "provider": {
+    "mlx-local": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "MacBook Pro MLX",
+      "options": {
+        "baseURL": "http://192.168.2.138:8080/v1"
+      },
+      "models": {
+        "/Users/Shared/Qwen3.6-35B-A3B-UD-IQ4_NL/Qwen3.6-35B-A3B-4bit": {
+          "name": "Qwen3.6 35B MoE Local",
+          "limit": {
+            "context": 65536,
+            "output": 8192
+          }
+        }
+      }
+    },
     "llama-server": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "Macbook llama-server",
@@ -54,8 +78,29 @@
         "apiKey": "llamacpp"
       },
       "models": {
-        "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf.gguf": {
+        "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf": {
           "name": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
+          "image": true,
+          "limit": {
+            "context": 65536,
+            "output": 16384
+          },
+          "cost": {
+            "input": 0.5,
+            "output": 3.0
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "Qwen3.6-27B-IQ4_NL.gguf": {
+          "name": "Qwen3.6-27B-IQ4_NL.gguf",
           "image": true,
           "limit": {
             "context": 65536,
@@ -81,8 +126,8 @@
       }
     }
   },
-  "model": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf.gguf",
+  "model": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
   "plugin": [
-    "@tarquinen/opencode-dcp"
+    "opencode-model-stats@latest"
   ]
 }
