@@ -1,5 +1,6 @@
 {
   "plugin": [
-    "opencode-model-stats@latest"
+    "@devinoldenburg/opencode-tps-meter/tui",
+    "oc-tps@latest"
   ]
 }

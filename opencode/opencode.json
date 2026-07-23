@@ -127,7 +127,5 @@
     }
   },
   "model": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
-  "plugin": [
-    "opencode-model-stats@latest"
-  ]
+  "plugin": ["oc-tps@latest"]
 }
