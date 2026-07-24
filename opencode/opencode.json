@@ -4,9 +4,9 @@
     "auto": true,
     "prune": true,
     "keep": {
-      "tokens": 2000
+      "tokens": 8000
     },
-    "buffer": 10000
+    "buffer": 20000
   },
   "permission": {
     "external_directory": {
