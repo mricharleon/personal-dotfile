@@ -3,7 +3,7 @@
   "compaction": {
     "auto": true,
     "prune": true,
-    "buffer": 14250,
+    "buffer": 45000,
     "keep": {
       "tokens": 3000
     }
@@ -35,7 +35,7 @@
     },
     "notion": {
       "type": "local",
-      "enabled": true,
+      "enabled": false,
       "command": [
         "/home/kali/.nvm/versions/node/v20.20.2/bin/npx",
         "@notionhq/notion-mcp-server"
@@ -64,8 +64,8 @@
         "Qwen3.6-35B-A3B-4bit": {
           "name": "Qwen3.6-35B-A3B-4bit",
           "limit": {
-            "context": 57000,
-            "output": 4096
+            "context": 64000,
+            "output": 8192
           },
           "cost": {
             "input": 0.17,
@@ -83,36 +83,6 @@
         }
       }
     },
-    "llama-server": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Macbook llama-server",
-      "options": {
-        "baseURL": "http://192.168.2.138:8080/v1",
-        "apiKey": "llamacpp"
-      },
-      "models": {
-        "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf": {
-          "name": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
-          "limit": {
-            "context": 65536,
-            "output": 16384
-          },
-          "cost": {
-            "input": 0.5,
-            "output": 3
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        }
-      }
-    }
   },
   "agent": {
     "plan": {
