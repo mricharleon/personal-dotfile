@@ -3,10 +3,10 @@
   "compaction": {
     "auto": true,
     "prune": true,
+    "buffer": 14250,
     "keep": {
-      "tokens": 8000
-    },
-    "buffer": 20000
+      "tokens": 3000
+    }
   },
   "permission": {
     "external_directory": {
@@ -16,56 +16,69 @@
     }
   },
   "mcp": {
+    "filesystem": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "@modelcontextprotocol/server-filesystem@latest",
+        "/home/kali"
+      ]
+    },
+    "context7": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "@upstash/context7-mcp@latest"
+      ]
+    },
+    "notion": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "/home/kali/.nvm/versions/node/v20.20.2/bin/npx",
+        "@notionhq/notion-mcp-server"
+      ]
+    },
     "playwright": {
       "type": "local",
+      "enabled": true,
       "command": [
         "npx",
         "@playwright/mcp@latest"
       ],
-      "enabled": false
-    },
-    "filesystem": {
-      "type": "local",
-      "command": [
-        "npx",
-        "@modelcontextprotocol/server-filesystem@latest",
-        "/home/kali/development"
-      ],
-      "enabled": true
-    },
-    "context7": {
-      "type": "local",
-      "command": [
-        "npx",
-        "@upstash/context7-mcp@latest"
-      ],
-      "enabled": true
-    },
-    "notion": {
-      "type": "local",
-      "command": [
-        "/home/kali/.nvm/versions/node/v20.20.2/bin/npx",
-        "@notionhq/notion-mcp-server"
-      ],
       "env": {
-        "NOTION_API_KEY": "{env:NOTION_API_KEY}"
-      },
-      "enabled": false
+        "PLAYWRIGHT_MCP_EXECUTABLE_PATH": "/usr/bin/chromium"
+      }
     }
   },
   "provider": {
-    "mlx-local": {
+    "omlx-local": {
       "npm": "@ai-sdk/openai-compatible",
-      "name": "MacBook Pro MLX",
+      "name": "MacBook Pro oMLX",
       "options": {
         "baseURL": "http://192.168.2.138:8080/v1"
       },
       "models": {
-        "/Users/Shared/Qwen3.6-35B-A3B-UD-IQ4_NL/Qwen3.6-35B-A3B-4bit": {
-          "name": "Qwen3.6 35B MoE Local",
+        "Qwen3.6-35B-A3B-4bit": {
+          "name": "Qwen3.6-35B-A3B-4bit",
           "limit": {
-            "context": 65536,
-            "output": 8192
+            "context": 57000,
+            "output": 4096
+          },
+          "cost": {
+            "input": 0.17,
+            "output": 0.69
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
           }
         }
       }
@@ -80,14 +93,13 @@
       "models": {
         "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf": {
           "name": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
-          "image": true,
           "limit": {
             "context": 65536,
             "output": 16384
           },
           "cost": {
             "input": 0.5,
-            "output": 3.0
+            "output": 3
           },
           "modalities": {
             "input": [
@@ -98,34 +110,23 @@
               "text"
             ]
           }
-        },
-        "Qwen3.6-27B-IQ4_NL.gguf": {
-          "name": "Qwen3.6-27B-IQ4_NL.gguf",
-          "image": true,
-          "limit": {
-            "context": 65536,
-            "output": 16384
-          },
-          "cost": {
-            "input": 0.5,
-            "output": 3.0
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          }
-        },
-        "default": {
-          "maxTokens": 32768
         }
       }
     }
   },
-  "model": "Qwen3.6-35B-A3B-UD-IQ4_NL.gguf",
-  "plugin": ["oc-tps@latest"]
+  "agent": {
+    "plan": {
+      "temperature": 0.6,
+      "topP": 0.95
+    },
+    "build": {
+      "temperature": 0.6,
+      "topP": 0.95
+    }
+  },
+  "model": "Qwen3.6-35B-A3B-4bit",
+  "plugin": [
+    "oc-tps@latest"
+  ],
+  "shell": "/usr/bin/zsh"
 }

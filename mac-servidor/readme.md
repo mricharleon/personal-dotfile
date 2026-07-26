@@ -1,8 +1,8 @@
 ## Para que nos sirve?
-Se usa este comando para poder monitorear el estado del usuario servidor en mac.
+usa el entorno de ia local levantado con oMLX en el macbook
 
-## Comandos para setear la velocidad de ventiladores
-sudo /usr/local/bin/smctl fan set 2200 --fan 0
-sudo /usr/local/bin/smctl fan set 2250 --fan 1
-
-
+- Se debe tener oMLX instalado
+- Debe tener un entorno virtual con python3.12
+- Copiar el archivo settings.json dentro de ~/.omlx/
+- Ejecutar el comando de establecer 27GB de ram para la gpu en macos
+- Ejecutar el modelo
