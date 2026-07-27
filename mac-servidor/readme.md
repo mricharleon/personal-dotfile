@@ -9,11 +9,10 @@ usa el entorno de ia local levantado con oMLX en el macbook
 
 ## nomic-ai/nomic-embed-text-v1.5
 Nos sirve para poder ser el intermediario de embeddings entre opencode y el server, con esto ahorramos tokens y optimizamos las consultas del usuario
-- pip install mlx-embedding-models
-- pip install sentence-transformers fastapi uvicorn einops
-- crear servidor (server.py)
-- ejecutarlo uvicorn server:app --host 0.0.0.0 --port 8001
+- brew install ollama
+- OLLAMA_HOST="0.0.0.0:11434" OLLAMA_FLASH_ATTENTION="1" OLLAMA_KV_CACHE_TYPE="q8_0" /opt/homebrew/opt/ollama/bin/ollama serve (Primera terminal)
+- ollama pull nomic-embed-text (Segunda terminal)
+- ssh -L 11434:localhost:11434 servidor@192.168.2.138 (crear puente desde kali a macbook)
 
-### en Opencode ejecutar:
-- export OPENAI_BASE_URL="http://192.168.2.138:8001/v1"
-- export OPENAI_API_KEY="local"
+### en Opencode colocar esto dentro del mcp de index:
+- OLLAMA_HOST=0.0.0.0:11434 ollama serve
