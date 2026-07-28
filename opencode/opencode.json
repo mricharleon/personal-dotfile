@@ -3,16 +3,20 @@
   "compaction": {
     "auto": true,
     "prune": true,
-    "buffer": 45000,
+    "buffer": 57500,
     "keep": {
-      "tokens": 3000
+      "tokens": 3800
     }
   },
   "permission": {
     "external_directory": {
       "~/.config/opencode/**": "allow",
       "/home/kali/macbookpro/**": "allow",
-      "/home/kali/**": "allow"
+      "/home/kali/**": "allow",
+      "/home/kali/Imágenes/**": "allow",
+      "/home/kali/Descargas/**": "allow",
+      "/home/kali/Documentos/**": "allow",
+      "/home/kali/Escritorio/**": "allow"
     }
   },
   "mcp": {
@@ -51,6 +55,32 @@
       "env": {
         "PLAYWRIGHT_MCP_EXECUTABLE_PATH": "/usr/bin/chromium"
       }
+    },
+    "blender-mcp": {
+      "type": "local",
+      "enabled": false,
+      "command": [
+        "/home/kali/.local/bin/blender-mcp"
+      ]
+    },
+    "codebase-index": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "--package",
+        "opencode-codebase-index",
+        "opencode-codebase-index-mcp",
+        "--project",
+        "."
+      ],
+      "env": {
+        "OLLAMA_HOST": "http://192.168.2.138:11434",
+        "EMBEDDING_PROVIDER": "ollama",
+        "OLLAMA_BASE_URL": "http://192.168.2.138:11434",
+        "EMBEDDING_MODEL": "nomic-embed-text"
+      }
     }
   },
   "provider": {
@@ -64,7 +94,7 @@
         "Qwen3.6-35B-A3B-4bit": {
           "name": "Qwen3.6-35B-A3B-4bit",
           "limit": {
-            "context": 64000,
+            "context": 81920,
             "output": 8192
           },
           "cost": {
@@ -79,6 +109,9 @@
             "output": [
               "text"
             ]
+          },
+          "options": {
+            "max_thinking_tokens": 2048
           }
         }
       }
@@ -96,7 +129,8 @@
   },
   "model": "Qwen3.6-35B-A3B-4bit",
   "plugin": [
-    "oc-tps@latest"
+    "oc-tps@latest",
+    "opencode-codebase-index"
   ],
   "shell": "/usr/bin/zsh"
 }
