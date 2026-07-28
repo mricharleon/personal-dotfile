@@ -28,10 +28,10 @@
   },
   "memory": {
     "prefill_memory_guard": true,
-    "memory_guard_tier": "aggressive",
+    "memory_guard_tier": "custom",
     "memory_guard_custom_ceiling_gb": 28.5,
     "soft_threshold": 0.93,
-    "hard_threshold": 0.98,
+    "hard_threshold": 0.99,
     "prefill_safe_zone_ratio": 0.92,
     "prefill_min_chunk_tokens": 128
   },
@@ -112,4 +112,3 @@
     "idle_timeout_seconds": null
   }
 }
-

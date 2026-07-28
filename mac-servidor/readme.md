@@ -4,8 +4,8 @@ usa el entorno de ia local levantado con oMLX en el macbook
 - Se debe tener oMLX instalado
 - Debe tener un entorno virtual con python3.12
 - Copiar el archivo settings.json dentro de ~/.omlx/
-- Ejecutar el comando de establecer 28GB de ram para la gpu en macos (sudo sysctl iogpu.wired_limit_mb=28672)
-- Ejecutar el modelo (omlx serve --host 0.0.0.0 --port 8080 --initial-cache-blocks 40 --memory-ceiling 28.0)
+- Ejecutar el comando de establecer 28.5GB de ram para la gpu en macos (sudo sysctl iogpu.wired_limit_mb=29184)
+- Ejecutar el modelo (omlx serve --host 0.0.0.0 --port 8080 --initial-cache-blocks 40)
 
 ## nomic-ai/nomic-embed-text-v1.5
 Nos sirve para poder ser el intermediario de embeddings entre opencode y el server, con esto ahorramos tokens y optimizamos las consultas del usuario
@@ -47,4 +47,4 @@ $$\text{Bloques} = \frac{81920 \text{ tokens}}{2048 \text{ tokens/bloque}} = 40 
 Para un sistema con **32 GB de RAM Unificada**, la línea de comando ideal es:
 
 ```bash
-omlx serve --host 0.0.0.0 --port 8080 --initial-cache-blocks 40 --memory-ceiling 28.0
+omlx serve --host 0.0.0.0 --port 8080 --initial-cache-blocks 40
