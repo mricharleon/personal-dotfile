@@ -15,7 +15,7 @@
     ],
     "sse_keepalive_mode": "chunk",
     "auto_start_on_launch": true,
-    "burst_decode_mode": "balanced",
+    "burst_decode_mode": "aggressive",
     "preserve_mid_system_cache": true
   },
   "model": {
@@ -33,7 +33,7 @@
     "soft_threshold": 0.93,
     "hard_threshold": 0.98,
     "prefill_safe_zone_ratio": 0.92,
-    "prefill_min_chunk_tokens": 64
+    "prefill_min_chunk_tokens": 128
   },
   "scheduler": {
     "max_concurrent_requests": 1,
@@ -43,10 +43,10 @@
   "cache": {
     "enabled": true,
     "hot_cache_only": false,
-    "ssd_cache_dir": null,
+    "ssd_cache_dir": "~/.omlx/cache",
     "ssd_cache_max_size": "auto",
     "hot_cache_max_size": "0",
-    "initial_cache_blocks": 64
+    "initial_cache_blocks": 512
   },
   "auth": {
     "api_key": null,
@@ -112,3 +112,4 @@
     "idle_timeout_seconds": null
   }
 }
+
