@@ -33,7 +33,7 @@
     "soft_threshold": 0.93,
     "hard_threshold": 0.99,
     "prefill_safe_zone_ratio": 0.92,
-    "prefill_min_chunk_tokens": 128
+    "prefill_min_chunk_tokens": 512
   },
   "scheduler": {
     "max_concurrent_requests": 1,
