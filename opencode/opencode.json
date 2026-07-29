@@ -3,9 +3,9 @@
   "compaction": {
     "auto": true,
     "prune": true,
-     "buffer": 57000,
+    "buffer": 57000,
     "keep": {
-       "tokens": 3800
+      "tokens": 3800
     }
   },
   "permission": {
@@ -25,7 +25,7 @@
       "enabled": true,
       "command": [
         "npx",
-        "@modelcontextprotocol/server-filesystem@latest",
+        "@modelcontextprotocol/server-filesystem",
         "/home/kali"
       ]
     },
@@ -34,7 +34,7 @@
       "enabled": true,
       "command": [
         "npx",
-        "@upstash/context7-mcp@latest"
+        "@upstash/context7-mcp"
       ]
     },
     "notion": {
@@ -50,7 +50,7 @@
       "enabled": true,
       "command": [
         "npx",
-        "@playwright/mcp@latest"
+        "@playwright/mcp"
       ],
       "env": {
         "PLAYWRIGHT_MCP_EXECUTABLE_PATH": "/usr/bin/chromium"
@@ -67,10 +67,6 @@
       "type": "local",
       "enabled": true,
       "command": [
-        "npx",
-        "-y",
-        "--package",
-        "opencode-codebase-index",
         "opencode-codebase-index-mcp",
         "--project",
         "."
@@ -97,7 +93,7 @@
         "Qwen3.6-35B-A3B-4bit": {
           "name": "Qwen3.6-35B-A3B-4bit",
           "limit": {
-             "context": 81920,
+            "context": 81920,
             "output": 8192
           },
           "cost": {
@@ -134,12 +130,6 @@
   "plugin": [
     "oc-tps@latest",
     "opencode-codebase-index"
-  ],
-  "skills": [
-    "https://github.com/dammyjay93/interface-design --skill interface-design",
-    "https://github.com/obra/superpowers --skill brainstorming",
-    "https://github.com/obra/superpowers --skill systematic-debugging",
-    "https://github.com/microsoft/playwright-cli --skill playwright-cli"
   ],
   "shell": "/usr/bin/zsh"
 }
