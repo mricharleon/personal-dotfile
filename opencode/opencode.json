@@ -135,5 +135,9 @@
     "oc-tps@latest",
     "opencode-codebase-index"
   ],
+  "skills": [
+    "https://github.com/dammyjay93/interface-design --skill interface-design",
+    "https://github.com/obra/superpowers --skill brainstorming"
+  ],
   "shell": "/usr/bin/zsh"
 }

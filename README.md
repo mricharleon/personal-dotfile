@@ -17,6 +17,10 @@ funcionalidades geniales ;)
 
 - **Opencode** (`opencode/`)
 
+## `opencode/AGENTS.md`
+
+Este archivo contiene las instrucciones y reglas de comportamiento del agente de opencode. Define el rol, idioma, convenciones de código, filosofía de desarrollo, reglas por lenguaje/framework, y configuraciones específicas para cada sesión. Es el punto de entrada que determina cómo opencode se comporta y qué decisiones toma al interactuar con tu código.
+
 ## Sincronización de configuración Opencode
 
 Para mantener el repositorio sincronizado con la configuración local de opencode:
