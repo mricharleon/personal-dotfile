@@ -3,9 +3,9 @@
   "compaction": {
     "auto": true,
     "prune": true,
-    "buffer": 57500,
+     "buffer": 57000,
     "keep": {
-      "tokens": 3800
+       "tokens": 3800
     }
   },
   "permission": {
@@ -87,6 +87,9 @@
     "omlx-local": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "MacBook Pro oMLX",
+      "tool_parser": "markdown",
+      "tools_format": "xml",
+      "strict_tools": false,
       "options": {
         "baseURL": "http://192.168.2.138:8080/v1"
       },
@@ -94,7 +97,7 @@
         "Qwen3.6-35B-A3B-4bit": {
           "name": "Qwen3.6-35B-A3B-4bit",
           "limit": {
-            "context": 81920,
+             "context": 81920,
             "output": 8192
           },
           "cost": {
@@ -115,7 +118,7 @@
           }
         }
       }
-    },
+    }
   },
   "agent": {
     "plan": {
