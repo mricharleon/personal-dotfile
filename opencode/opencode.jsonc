@@ -1,24 +1,44 @@
 {
+  // URL del schema JSON oficial de opencode (validación de estructura)
   "$schema": "https://opencode.ai/config.json",
+
+  // --- Compacción automática de contexto ---
   "compaction": {
+    // Activa la compacción automática (resumir conversación cuando se acerca al límite)
     "auto": true,
+    // Permite la poda/agregación de mensajes antiguos durante la compacción
     "prune": true,
+    // Tokens de margen desde el límite del contexto antes de disparar compacción (11K = compacta a ~71K)
     "reserved": 4000,
+    // Tokens mínimos que se preservan intactos al inicio de la conversación (instrucciones del sistema)
     "preserve_recent_tokens": 3800,
+    // Número de turnos recientes que se mantienen completos sin poda durante la compacción
     "tail_turns": 3
   },
+
+  // --- Permisos de directorios externos ---
   "permission": {
     "external_directory": {
+      // Acceso al directorio de config de opencode
       "~/.config/opencode/**": "allow",
+      // Acceso al home del usuario remoto (macbookpro)
       "/home/kali/macbookpro/**": "allow",
+      // Acceso completo al home del usuario local
       "/home/kali/**": "allow",
+      // Acceso a la carpeta de imágenes del usuario
       "/home/kali/Imágenes/**": "allow",
+      // Acceso a la carpeta de descargas del usuario
       "/home/kali/Descargas/**": "allow",
+      // Acceso a la carpeta de documentos del usuario
       "/home/kali/Documentos/**": "allow",
+      // Acceso a la carpeta de escritorio del usuario
       "/home/kali/Escritorio/**": "allow"
     }
   },
+
+  // --- Servidores MCP (Model Context Protocol) ---
   "mcp": {
+    // Servidor de acceso al sistema de archivos local
     "filesystem": {
       "type": "local",
       "enabled": true,
@@ -28,6 +48,7 @@
         "/home/kali"
       ]
     },
+    // Servidor de documentación de librerías (Context7)
     "context7": {
       "type": "local",
       "enabled": true,
@@ -36,6 +57,7 @@
         "@upstash/context7-mcp"
       ]
     },
+    // Servidor de integración con Notion (desactivado)
     "notion": {
       "type": "local",
       "enabled": false,
@@ -44,6 +66,7 @@
         "@notionhq/notion-mcp-server"
       ]
     },
+    // Servidor de automatización de navegador (Playwright)
     "playwright": {
       "type": "local",
       "enabled": true,
@@ -51,10 +74,12 @@
         "npx",
         "@playwright/mcp"
       ],
+      // Ruta al binario de Chromium para Playwright
       "env": {
         "PLAYWRIGHT_MCP_EXECUTABLE_PATH": "/usr/bin/chromium"
       }
     },
+    // Servidor de integración con Blender 3D (desactivado)
     "blender-mcp": {
       "type": "local",
       "enabled": false,
@@ -62,6 +87,7 @@
         "/home/kali/.local/bin/blender-mcp"
       ]
     },
+    // Servidor de indexación semántica del código (codebase-index)
     "codebase-index": {
       "type": "local",
       "enabled": true,
@@ -70,6 +96,7 @@
         "--project",
         "."
       ],
+      // Variables de entorno para ollama en red local (192.168.2.138)
       "env": {
         "OLLAMA_HOST": "http://192.168.2.138:11434",
         "EMBEDDING_PROVIDER": "ollama",
@@ -78,58 +105,86 @@
       }
     }
   },
+
+  // --- Configuración del proveedor de IA ---
   "provider": {
     "omlx-local": {
+      // Paquete npm del adaptador OpenAI compatible
       "npm": "@ai-sdk/openai-compatible",
+      // Nombre descriptivo del proveedor
       "name": "MacBook Pro oMLX",
+      // Formato de parsing de herramientas (tools) del modelo
       "tool_parser": "markdown",
+      // Formato de formateo de herramientas para enviar al modelo
       "tools_format": "xml",
+      // No valida estrictamente el schema de herramientas
       "strict_tools": false,
       "options": {
+        // URL base de la API del modelo (ollama en red local)
         "baseURL": "http://192.168.2.138:8080/v1"
       },
       "models": {
         "Qwen3.6-35B-A3B-4bit": {
+          // Nombre del modelo a usar
           "name": "Qwen3.6-35B-A3B-4bit",
           "limit": {
+            // Máximo de tokens de contexto total (81.9K)
             "context": 71680,
+            // Máximo de tokens de respuesta (8K)
             "output": 8192
           },
           "cost": {
+            // Costo por 1M de tokens de entrada (USD)
             "input": 0.17,
+            // Costo por 1M de tokens de salida (USD)
             "output": 0.69
           },
           "modalities": {
+            // Tipos de input que acepta el modelo (texto + imágenes)
             "input": [
               "text",
               "image"
             ],
+            // Tipos de output que genera el modelo (solo texto)
             "output": [
               "text"
             ]
           },
           "options": {
+            // Máximo de tokens para razonamiento/pensamiento del modelo
             "max_thinking_tokens": 2048
           }
         }
       }
     }
   },
+
+  // --- Configuración de agentes especiales ---
   "agent": {
+    // Parámetros del agente de planificación (plan)
     "plan": {
+      // Temperatura para respuestas creativas/variadas (0.6 = moderado)
       "temperature": 0.6,
+      // Muestreo top-p (0.95 = considera 95% de las opciones probables)
       "topP": 0.95
     },
+    // Parámetros del agente de construcción (build)
     "build": {
       "temperature": 0.6,
       "topP": 0.95
     }
   },
+
+  // Modelo por defecto para todas las sesiones
   "model": "Qwen3.6-35B-A3B-4bit",
+
+  // Lista de plugins a cargar al iniciar opencode
   "plugin": [
     "oc-tps@latest",
     "opencode-codebase-index",
     "opencode-notify"
   ],
+
+  // Shell que usa opencode para ejecutar comandos del sistema
   "shell": "/usr/bin/zsh"
 }
