@@ -29,7 +29,7 @@
   "memory": {
     "prefill_memory_guard": true,
     "memory_guard_tier": "custom",
-    "memory_guard_custom_ceiling_gb": 28.5,
+    "memory_guard_custom_ceiling_gb": 29.5,
     "soft_threshold": 0.93,
     "hard_threshold": 0.99,
     "prefill_safe_zone_ratio": 0.96,
@@ -45,8 +45,8 @@
     "hot_cache_only": false,
     "ssd_cache_dir": "~/.omlx/cache",
     "ssd_cache_max_size": "auto",
-    "hot_cache_max_size": "0",
-    "initial_cache_blocks": 40
+    "hot_cache_max_size": "1GB",
+    "initial_cache_blocks": 35
   },
   "auth": {
     "api_key": null,
@@ -71,7 +71,7 @@
     "ca_bundle": ""
   },
   "sampling": {
-    "max_context_window": 81920,
+    "max_context_window": 71680,
     "max_context_window_policy": null,
     "max_tokens": 15384,
     "temperature": 0.6,
