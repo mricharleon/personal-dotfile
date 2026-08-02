@@ -74,10 +74,10 @@
     "max_context_window": 71680,
     "max_context_window_policy": null,
     "max_tokens": 15384,
-    "temperature": 0.6,
-    "top_p": 0.95,
-    "top_k": 20,
-    "repetition_penalty": 1.0
+    "temperature": 0.45,
+    "top_p": 0.92,
+    "top_k": 50,
+    "repetition_penalty": 1.08
   },
   "logging": {
     "log_dir": null,

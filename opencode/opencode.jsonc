@@ -8,7 +8,7 @@
     "auto": true,
     // Permite la poda/agregación de mensajes antiguos durante la compacción
     "prune": true,
-    // Tokens de margen desde el límite del contexto antes de disparar compacción (11K = compacta a ~71K)
+    // Tokens de margen desde el límite del contexto antes de disparar compacción (4K = compacta a ~67K)
     "reserved": 4000,
     // Tokens mínimos que se preservan intactos al inicio de la conversación (instrucciones del sistema)
     "preserve_recent_tokens": 3800,
@@ -40,8 +40,11 @@
   "mcp": {
     // Servidor de acceso al sistema de archivos local
     "filesystem": {
+      // Tipo de servidor MCP (local o remote)
       "type": "local",
+      // Habilita este servidor MCP
       "enabled": true,
+      // Comando para iniciar el servidor con directorio home como raíz
       "command": [
         "npx",
         "@modelcontextprotocol/server-filesystem",
@@ -50,8 +53,11 @@
     },
     // Servidor de documentación de librerías (Context7)
     "context7": {
+      // Tipo de servidor MCP (local o remote)
       "type": "local",
+      // Habilita este servidor MCP
       "enabled": true,
+      // Comando para iniciar el servidor
       "command": [
         "npx",
         "@upstash/context7-mcp"
@@ -59,8 +65,11 @@
     },
     // Servidor de integración con Notion (desactivado)
     "notion": {
+      // Tipo de servidor MCP (local o remote)
       "type": "local",
+      // Habilita este servidor MCP (desactivado)
       "enabled": false,
+      // Comando para iniciar el servidor con ruta completa a nvm node
       "command": [
         "/home/kali/.nvm/versions/node/v20.20.2/bin/npx",
         "@notionhq/notion-mcp-server"
@@ -68,29 +77,39 @@
     },
     // Servidor de automatización de navegador (Playwright)
     "playwright": {
+      // Tipo de servidor MCP (local o remote)
       "type": "local",
+      // Habilita este servidor MCP
       "enabled": true,
+      // Comando para iniciar el servidor
       "command": [
         "npx",
         "@playwright/mcp"
       ],
       // Ruta al binario de Chromium para Playwright
       "env": {
+        // Variable de entorno que apunta al binario de Chromium del sistema
         "PLAYWRIGHT_MCP_EXECUTABLE_PATH": "/usr/bin/chromium"
       }
     },
     // Servidor de integración con Blender 3D (desactivado)
     "blender-mcp": {
+      // Tipo de servidor MCP (local o remote)
       "type": "local",
+      // Habilita este servidor MCP (desactivado)
       "enabled": false,
+      // Comando para iniciar el servidor
       "command": [
         "/home/kali/.local/bin/blender-mcp"
       ]
     },
     // Servidor de indexación semántica del código (codebase-index)
     "codebase-index": {
+      // Tipo de servidor MCP (local o remote)
       "type": "local",
+      // Habilita este servidor MCP
       "enabled": true,
+      // Comando para iniciar el servidor con proyecto actual
       "command": [
         "opencode-codebase-index-mcp",
         "--project",
@@ -98,9 +117,13 @@
       ],
       // Variables de entorno para ollama en red local (192.168.2.138)
       "env": {
+        // Host del servidor Ollama para embeddings
         "OLLAMA_HOST": "http://192.168.2.138:11434",
+        // Proveedor de embeddings (ollama)
         "EMBEDDING_PROVIDER": "ollama",
+        // URL base del servidor Ollama para embeddings
         "OLLAMA_BASE_URL": "http://192.168.2.138:11434",
+        // Modelo de embeddings a usar (nomic-embed-text)
         "EMBEDDING_MODEL": "nomic-embed-text"
       }
     }
@@ -120,18 +143,20 @@
       // No valida estrictamente el schema de herramientas
       "strict_tools": false,
       "options": {
-        // URL base de la API del modelo (ollama en red local)
-        "baseURL": "http://192.168.2.138:8080/v1"
+        // URL base de la API del modelo (proxy que remueve top_p, reenvía a OMLX)
+        // El proxy corre en localhost:8081 como servicio systemd (omlx-proxy.service)
+        // Ver: /home/kali/.config/opencode/plugins/omlx-top-p-stripper.py
+        "baseURL": "http://127.0.0.1:8081/v1"
       },
       "models": {
         "Qwen3.6-35B-A3B-4bit": {
           // Nombre del modelo a usar
           "name": "Qwen3.6-35B-A3B-4bit",
           "limit": {
-            // Máximo de tokens de contexto total (81.9K)
+            // Máximo de tokens de contexto total (71.9K)
             "context": 71680,
-            // Máximo de tokens de respuesta (8K)
-            "output": 8192
+            // Máximo de tokens de respuesta (sincronizado con OMLX max_tokens)
+            "output": 15384
           },
           "cost": {
             // Costo por 1M de tokens de entrada (USD)
@@ -159,19 +184,25 @@
     }
   },
 
-  // --- Configuración de agentes especiales ---
+  // --- Parámetros de los agentes internos (build y plan) ---
   "agent": {
-    // Parámetros del agente de planificación (plan)
-    "plan": {
-      // Temperatura para respuestas creativas/variadas (0.6 = moderado)
-      "temperature": 0.6,
-      // Muestreo top-p (0.95 = considera 95% de las opciones probables)
-      "topP": 0.95
-    },
-    // Parámetros del agente de construcción (build)
+    // Agente de construcción: genera código y ejecuta tareas complejas
     "build": {
-      "temperature": 0.6,
-      "topP": 0.95
+      // Temperatura de muestreo (0.45 = equilibrado entre creatividad y precisión)
+      "temperature": 0.45,
+      // Top-k: considera solo los k tokens más probables (50 = moderado)
+      "top_k": 50,
+      // Penalización por repetición (1.08 = leve penalización para modelo 4-bit)
+      "repetition_penalty": 1.08
+    },
+    // Agente de planificación: analiza y planifica antes de ejecutar
+    "plan": {
+      // Temperatura más baja (0.25 = más determinista y enfocado)
+      "temperature": 0.25,
+      // Top-k más bajo (20 = menos opciones, más preciso)
+      "top_k": 20,
+      // Penalización por repetición más suave (1.05)
+      "repetition_penalty": 1.05
     }
   },
 
