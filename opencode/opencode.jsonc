@@ -155,6 +155,8 @@
           "limit": {
             // Máximo de tokens de contexto total (71.9K)
             "context": 71680,
+            // Máximo de tokens de entrada (igual a context para que reserved funcione)
+            "input": 71680,
             // Máximo de tokens de respuesta (sincronizado con OMLX max_tokens)
             "output": 15384
           },
