@@ -1,6 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    "list"
+    "list",
+    "@44e9e3860ba57f84f53f8592/opencode-tps-meter",
+    "opencode-codebase-index"
   ]
 }

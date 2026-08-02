@@ -191,9 +191,9 @@
       // Temperatura de muestreo (0.45 = equilibrado entre creatividad y precisión)
       "temperature": 0.45,
       // Top-k: considera solo los k tokens más probables (50 = moderado)
-      "top_k": 50,
+      "top_k": 35,
       // Penalización por repetición (1.08 = leve penalización para modelo 4-bit)
-      "repetition_penalty": 1.08
+      "repetition_penalty": 1.06
     },
     // Agente de planificación: analiza y planifica antes de ejecutar
     "plan": {
@@ -202,7 +202,7 @@
       // Top-k más bajo (20 = menos opciones, más preciso)
       "top_k": 20,
       // Penalización por repetición más suave (1.05)
-      "repetition_penalty": 1.05
+      "repetition_penalty": 1.04
     }
   },
 

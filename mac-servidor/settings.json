@@ -76,8 +76,8 @@
     "max_tokens": 15384,
     "temperature": 0.45,
     "top_p": 0.92,
-    "top_k": 50,
-    "repetition_penalty": 1.08
+    "top_k": 35,
+    "repetition_penalty": 1.06
   },
   "logging": {
     "log_dir": null,
