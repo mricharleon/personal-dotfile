@@ -20,7 +20,8 @@
   },
   "model": {
     "model_dirs": [
-      "/Users/Shared/Qwen3.6-35B-A3B-4bit"
+      "/Users/Shared/Qwen3.6-35B-A3B-4bit",
+      "/Users/Shared/KAT-Coder-V2.5-Dev-OptiQ-4bit"
     ],
     "model_dir": "/Users/Shared/Qwen3.6-35B-A3B-4bit",
     "model_fallback": false,
@@ -74,9 +75,9 @@
     "max_context_window": 71680,
     "max_context_window_policy": null,
     "max_tokens": 15384,
-    "temperature": 0.45,
-    "top_p": 0.92,
-    "top_k": 35,
+    "temperature": 1,
+    "top_p": 0.95,
+    "top_k": 20,
     "repetition_penalty": 1.06
   },
   "logging": {
@@ -93,11 +94,11 @@
   },
   "integrations": {
     "codex_model": null,
-    "opencode_model": "Qwen3.6-35B-A3B-4bit",
+    "opencode_model": "KAT-Coder-V2.5-Dev-OptiQ-4bit",
     "openclaw_model": null,
     "hermes_model": null,
     "pi_model": null,
-    "copilot_model": "Qwen3.6-35B-A3B-4bit",
+    "copilot_model": "KAT-Coder-V2.5-Dev-OptiQ-4bit",
     "openclaw_tools_profile": "coding",
     "markitdown_enabled": true,
     "markitdown_expose_model": false,
