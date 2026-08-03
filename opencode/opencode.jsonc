@@ -181,6 +181,38 @@
             // Máximo de tokens para razonamiento/pensamiento del modelo
             "max_thinking_tokens": 2048
           }
+        },
+        "KAT-Coder-V2.5-Dev-OptiQ-4bit": {
+          // Nombre del modelo a usar
+          "name": "KAT-Coder-V2.5-Dev-OptiQ-4bit",
+          "limit": {
+            // Máximo de tokens de contexto total (71.9K)
+            "context": 71680,
+            // Máximo de tokens de entrada (igual a context para que reserved funcione)
+            "input": 71680,
+            // Máximo de tokens de respuesta (sincronizado con OMLX max_tokens)
+            "output": 15384
+          },
+          "cost": {
+            // Costo por 1M de tokens de entrada (USD)
+            "input": 0.17,
+            // Costo por 1M de tokens de salida (USD)
+            "output": 0.69
+          },
+          "modalities": {
+            // Tipos de input que acepta el modelo (solo texto)
+            "input": [
+              "text"
+            ],
+            // Tipos de output que genera el modelo (solo texto)
+            "output": [
+              "text"
+            ]
+          },
+          "options": {
+            // Máximo de tokens para razonamiento/pensamiento del modelo
+            "max_thinking_tokens": 2048
+          }
         }
       }
     }
@@ -191,16 +223,16 @@
     // Agente de construcción: genera código y ejecuta tareas complejas
     "build": {
       // Temperatura de muestreo (0.45 = equilibrado entre creatividad y precisión)
-      "temperature": 0.45,
-      // Top-k: considera solo los k tokens más probables (50 = moderado)
+      "temperature": 1,
+      // Top-k: considera solo los k tokens más probables (35 = moderado)
       "top_k": 35,
-      // Penalización por repetición (1.08 = leve penalización para modelo 4-bit)
+      // Penalización por repetición (1.06 = leve penalización para modelo 4-bit)
       "repetition_penalty": 1.06
     },
     // Agente de planificación: analiza y planifica antes de ejecutar
     "plan": {
       // Temperatura más baja (0.25 = más determinista y enfocado)
-      "temperature": 0.25,
+      "temperature": 1,
       // Top-k más bajo (20 = menos opciones, más preciso)
       "top_k": 20,
       // Penalización por repetición más suave (1.05)
