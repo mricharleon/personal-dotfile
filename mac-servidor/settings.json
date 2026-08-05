@@ -30,11 +30,11 @@
   "memory": {
     "prefill_memory_guard": true,
     "memory_guard_tier": "custom",
-    "memory_guard_custom_ceiling_gb": 29.5,
+    "memory_guard_custom_ceiling_gb": 30,
     "soft_threshold": 0.93,
     "hard_threshold": 0.99,
     "prefill_safe_zone_ratio": 0.96,
-    "prefill_min_chunk_tokens": 128
+    "prefill_min_chunk_tokens": 64
   },
   "scheduler": {
     "max_concurrent_requests": 1,
@@ -98,7 +98,7 @@
     "openclaw_model": null,
     "hermes_model": null,
     "pi_model": null,
-    "copilot_model": "KAT-Coder-V2.5-Dev-OptiQ-4bit",
+    "copilot_model": null,
     "openclaw_tools_profile": "coding",
     "markitdown_enabled": true,
     "markitdown_expose_model": false,
