@@ -8,8 +8,8 @@
     "auto": true,
     // Permite la poda/agregación de mensajes antiguos durante la compacción
     "prune": true,
-    // Tokens de margen desde el límite del contexto antes de disparar compacción (4K = compacta a ~67K)
-    "reserved": 4000,
+    // Tokens de margen desde el límite del contexto antes de disparar compacción (10K = compacta a ~61K)
+    "reserved": 10000,
     // Tokens mínimos que se preservan intactos al inicio de la conversación (instrucciones del sistema)
     "preserve_recent_tokens": 3800,
     // Número de turnos recientes que se mantienen completos sin poda durante la compacción
@@ -88,8 +88,9 @@
       ],
       // Ruta al binario de Chromium para Playwright
       "env": {
-        // Variable de entorno que apunta al binario de Chromium del sistema
-        "PLAYWRIGHT_MCP_EXECUTABLE_PATH": "/usr/bin/chromium"
+        "PLAYWRIGHT_MCP_EXECUTABLE_PATH": "/usr/bin/chromium",
+        "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH": "/usr/bin/chromium",
+        "BROWSER": "chromium"
       }
     },
     // Servidor de integración con Blender 3D (desactivado)
@@ -225,7 +226,7 @@
       // Temperatura de muestreo (0.45 = equilibrado entre creatividad y precisión)
       "temperature": 1,
       // Top-k: considera solo los k tokens más probables (35 = moderado)
-      "top_k": 35,
+      "top_k": 20,
       // Penalización por repetición (1.06 = leve penalización para modelo 4-bit)
       "repetition_penalty": 1.06
     },
