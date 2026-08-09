@@ -32,7 +32,9 @@
       // Acceso a la carpeta de documentos del usuario
       "/home/kali/Documentos/**": "allow",
       // Acceso a la carpeta de escritorio del usuario
-      "/home/kali/Escritorio/**": "allow"
+      "/home/kali/Escritorio/**": "allow",
+      // Acceso a /tmp y subdirectorios
+      "/tmp/**": "allow"
     }
   },
 
