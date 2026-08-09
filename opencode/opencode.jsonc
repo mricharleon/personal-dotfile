@@ -145,9 +145,10 @@
       "strict_tools": false,
       "options": {
         // URL base de la API del modelo (proxy que remueve top_p, reenvía a OMLX)
-        // El proxy corre en localhost:8081 como servicio systemd (omlx-proxy.service)
+        // El proxy corre en localhost:8082 (omlx-top-p-stripper-v2, streaming)
         // Ver: /home/kali/.config/opencode/plugins/omlx-top-p-stripper.py
         "baseURL": "http://127.0.0.1:8081/v1"
+        //"baseURL": "http://192.168.2.138:8080/v1"
       },
       "models": {
         "Qwen3.6-35B-A3B-4bit": {
