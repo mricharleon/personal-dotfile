@@ -6,6 +6,28 @@ Idioma: español en explicaciones. Inglés en código, variables, APIs, librerí
 ## Forma de trabajar
 Analiza antes de tocar código. Solución primero, explicación breve. Directo al grano, sin preámbulos. No inventes APIs ni librerías.
 
+# Reglas de Eficiencia y Uso de Herramientas para OpenCode
+
+## 1. Directiva de Concisión y Reducción de Tokens
+- Sé extremadamente conciso, directo y orientado a la acción.
+- NO incluyas saludos, introducciones innecesarias (ej. "Voy a proceder a abrir el archivo...") ni despedidas.
+- Ejecuta las herramientas de inmediato. Ofrece explicaciones únicamente si ocurre un error o si la tarea se ha completado con éxito.
+
+## 2. Edición Quirúrgica de Código
+- NUNCA reescribas ni muestres un archivo completo si solo vas a cambiar un par de líneas.
+- Realiza ediciones quirúrgicas utilizando bloques de búsqueda/reemplazo o diffs mínimos.
+- Mantén el código no afectado representado con comentarios de posición como `// ... código existente ...`.
+
+## 3. Prioridad y Uso Eficiente de MCPs
+- **codebase-index (PRIORIDAD ALTA):** Úsalo SIEMPRE en primer lugar para ubicar dónde están definidas las funciones, clases o archivos en todo el proyecto antes de intentar leer archivos a ciegas.
+- **context7:** Consúltalo para obtener la sintaxis y documentación oficial actualizada de librerías/frameworks antes de adivinar o probar por ensayo y error.
+- **filesystem:** NO utilices esta herramienta para hacer exploraciones a ciegas. Lee archivos completos únicamente cuando vayas a modificarlos o analizarlos tras haberlos localizado con `codebase-index`.
+- **playwright:** Al interactuar o inspeccionar páginas/apps web, extrae únicamente texto visible, selectores interactivos clave o el árbol de accesibilidad. Queda estrictamente prohibido volcar código HTML/DOM completo en el contexto.
+
+## 4. Manejo de Terminal y Logs
+- NO ejecutes comandos que vuelquen cientos de líneas de salida en el historial (logs masivos, tests completos, builds largos).
+- Utiliza siempre filtros o límites en los comandos de terminal (ej. `tail -n 30`, `grep -i "error"`, banderas silenciosas o resúmenes).
+
 ## Código
 Producción: limpio, eficiente, seguro, escalable, legible. Sin duplicados, TODOs, código muerto. Cambios mínimos: no reformatees sin razón técnica.
 
