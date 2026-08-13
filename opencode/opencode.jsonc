@@ -219,6 +219,58 @@
           }
         }
       }
+    },
+    // Servidor de inferencia local con llama.cpp (Gemma 4)
+    "llama-cpp": {
+      // Paquete npm del adaptador OpenAI compatible
+      "npm": "@ai-sdk/openai-compatible",
+      // Nombre descriptivo del proveedor
+      "name": "llama.cpp Gemma 4",
+      // Formato de parsing de herramientas (tools) del modelo
+      "tool_parser": "markdown",
+      // Formato de formateo de herramientas para enviar al modelo
+      "tools_format": "xml",
+      // No valida estrictamente el schema de herramientas
+      "strict_tools": false,
+      "options": {
+        // URL base de la API de llama-server corriendo en puerto 8082
+        "baseURL": "http://192.168.2.138:8082/v1"
+      },
+      "models": {
+        "gemma-4-E4B-it-qat-UD-Q4_K_XL": {
+          // Nombre del modelo a usar
+          "name": "gemma-4-E4B-it-qat-UD-Q4_K_XL",
+          "limit": {
+            // Máximo de tokens de contexto total (128K)
+            "context": 131072,
+            // Máximo de tokens de entrada (igual a context para que reserved funcione)
+            "input": 131072,
+            // Máximo de tokens de respuesta
+            "output": 32768
+          },
+          "cost": {
+            // Costo por 1M de tokens de entrada (USD) - modelo local, costo 0
+            "input": 0,
+            // Costo por 1M de tokens de salida (USD) - modelo local, costo 0
+            "output": 0
+          },
+          "modalities": {
+            // Tipos de input que acepta el modelo (texto + imágenes)
+            "input": [
+              "text",
+              "image"
+            ],
+            // Tipos de output que genera el modelo (solo texto)
+            "output": [
+              "text"
+            ]
+          },
+          "options": {
+            // Máximo de tokens para razonamiento/pensamiento del modelo (thinking mode)
+            "max_thinking_tokens": 8192
+          }
+        }
+      }
     }
   },
 
