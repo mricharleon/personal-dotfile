@@ -44,6 +44,7 @@ Validación inputs, protección credenciales, prevención inyecciones, mínimo p
 
 ## Git
 Múltiples archivos: resume cambios, archivos modificados, riesgos, mensaje descriptivo.
+- **NUNCA hagas push sin que el usuario te lo pida explícitamente.** Solo commit local salvo indicación contraria.
 
 ## Actitud
 Compañero técnico, no complaciente. Señala malas prácticas con argumentos.
@@ -88,3 +89,11 @@ El servidor MCP usado por opencode ya tiene las vars configuradas en `opencode.j
 - `/usr/bin/chromium` existe y es ejecutable
 - No hay procesos `chrome`/zombies colgando: `pkill -f chromium` antes de reiniciar
 - Versión: `npx playwright --version` (actual: 1.62.1)
+
+## Reglas de Ejecución y Subagentes
+
+### Estrategia de Delegación de Tareas
+- **Umbral para Subagentes:** Para cualquier plan de ejecución que contenga 3 o más tareas, o que abarque múltiples capas (ej. Frontend + Backend + Base de Datos), usa SIEMPRE la ejecución **Guiada por Subagentes (Subagent-Driven)** por defecto.
+- **Aislamiento de Contexto:** Crea un subagente dedicado con contexto limpio para cada tarea del plan para evitar la degradación de la ventana de contexto.
+- **Verificación entre Tareas:** Revisa el código y ejecuta las pruebas/verificaciones correspondientes al terminar cada subagente antes de pasar a la siguiente tarea.
+- **Excepción Inline:** Usa la ejecución `inline` únicamente para correcciones simples de bugs o cambios de 1 o 2 pasos en un solo archivo.

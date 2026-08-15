@@ -4,3 +4,7 @@
 
 # Opencode local tooling
 .opencode/index/
+
+# Python cache
+__pycache__/
+*.pyc
