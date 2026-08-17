@@ -15,6 +15,34 @@ Nos sirve para poder ser el intermediario de embeddings entre opencode y el serv
 - ssh -L 11434:localhost:11434 servidor@192.168.2.138 (crear puente desde kali a macbook) 
 
 
+## Limpieza de Memoria (macos_memory_cleaner.sh)
+
+Script para liberar RAM y terminar procesos no esenciales en el MacBook Pro M1 Pro (32 GB).
+
+### Uso
+```bash
+sudo ~/macos_memory_cleaner.sh
+```
+
+### Qué hace
+1. **Paso 0**: Lista los procesos protegidos (detectados dinámicamente por nombre)
+2. **Paso 1**: Snapshot inicial de memoria (vm_stat)
+3. **Paso 2**: `sudo purge` — vende caché de disco
+4. **Paso 3**: Fuerza venta de páginas inactive (`vm.drop_caches`)
+5. **Paso 4**: Cierra procesos no esenciales (Spotlight, Siri, widgets, etc.) respetando protegidos
+6. **Paso 5**: Reinicia compresor de memoria
+
+### Procesos protegidos (nunca se matan)
+- `launchd`, `WindowServer`, `python`, `omxl`/`omlx`, `server`, `ollama`, `mactop`
+
+### Deploy
+```bash
+scp macos_memory_cleaner.sh servidor@192.168.2.138:~/
+chmod +x ~/macos_memory_cleaner.sh
+```
+
+---
+
 # Guía de Configuración de Memoria y Contexto en oMLX
 
 Esta documentación explica la matemática detrás de la selección de bloques de caché KV en **oMLX** para el modelo `Qwen3.6-35B-A3B` en un equipo Apple Silicon de 32 GB de RAM, y cómo recalcular los parámetros en caso de modificar la ventana de contexto.
