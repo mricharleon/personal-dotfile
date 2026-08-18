@@ -191,7 +191,7 @@
           "name": "KAT-Coder-V2.5-Dev-OptiQ-4bit",
           "limit": {
             // Máximo de tokens de contexto total (100K)
-            "context": 100000,
+            "context": 75000,
             // Máximo de tokens de entrada (igual a context para que reserved funcione)
             "input": 75000,
             // Máximo de tokens de respuesta (sincronizado con OMLX max_tokens)

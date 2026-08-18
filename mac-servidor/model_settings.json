@@ -9,7 +9,7 @@
       "turboquant_kv_bits": 8
     },
     "KAT-Coder-V2.5-Dev-OptiQ-4bit": {
-      "prefill_min_chunk_tokens": 128,
+      "prefill_min_chunk_tokens": 64,
       "prefill_chunk_size": 2048,
       "cache_boundary_interval": 8192,
       "mtp_enabled": false,
