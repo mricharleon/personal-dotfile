@@ -8,8 +8,8 @@
     "auto": true,
     // Permite la poda/agregación de mensajes antiguos durante la compacción
     "prune": true,
-    // Tokens de margen desde el límite del contexto antes de disparar compacción (6K = compacta a ~94K)
-    "reserved": 6000,
+    // Tokens de margen desde el límite del contexto antes de disparar compacción (5K = compacta a ~70K)
+    "reserved": 5000,
     // Tokens mínimos que se preservan intactos al inicio de la conversación (instrucciones del sistema)
     "preserve_recent_tokens": 3800,
     // Número de turnos recientes que se mantienen completos sin poda durante la compacción
@@ -193,7 +193,7 @@
             // Máximo de tokens de contexto total (100K)
             "context": 100000,
             // Máximo de tokens de entrada (igual a context para que reserved funcione)
-            "input": 100000,
+            "input": 75000,
             // Máximo de tokens de respuesta (sincronizado con OMLX max_tokens)
             "output": 15384
           },
