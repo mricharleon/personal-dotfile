@@ -284,7 +284,9 @@
       // Top-k: considera solo los k tokens más probables (35 = moderado)
       "top_k": 20,
       // Penalización por repetición (1.06 = leve penalización para modelo 4-bit)
-      "repetition_penalty": 1.06
+      "repetition_penalty": 1.06,
+      // Modelo: KAT-Coder-V2.5-Dev-VL-oQ4e-mtp
+      "model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp"
     },
     // Agente de planificación: analiza y planifica antes de ejecutar
     "plan": {
@@ -293,12 +295,76 @@
       // Top-k más bajo (20 = menos opciones, más preciso)
       "top_k": 20,
       // Penalización por repetición más suave (1.05)
-      "repetition_penalty": 1.04
+      "repetition_penalty": 1.04,
+      // Modelo: KAT-Coder-V2.5-Dev-VL-oQ4e-mtp
+      "model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp"
+    },
+    // Agente de auditoría de seguridad: identifica vulnerabilidades sin modificar código
+    "security-auditor": {
+      "description": "Audita seguridad del código, configuraciones y deploy. Busca vulnerabilidades sin modificar nada.",
+      "mode": "subagent",
+      "model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
+      "temperature": 0.1,
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "docker compose *": "allow",
+          "grep *": "allow",
+          "find *": "allow"
+        }
+      }
+    },
+    // Agente de ejecución de tests: corre tests y reporta sin modificar código
+    "test-runner": {
+      "description": "Ejecuta tests de todos los servicios y reporta resultados sin modificar código.",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-20250514",
+      "fallback_model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow"
+      }
+    },
+    // Asistente de migrations: genera y valida Alembic sin aplicar
+    "migration-helper": {
+      "description": "Genera y valida migrations de Alembic sin aplicarlas. Reporta diffs para aprobación del usuario.",
+      "mode": "subagent",
+      "model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow"
+      }
+    },
+    // Agente primario de deploy: orquesta build, migrations y restart con aprobación
+    "deploy": {
+      "description": "Orquesta el deploy completo del proyecto: build, migrations y reinicio de servicios Docker. Cada paso requiere aprobación.",
+      "mode": "primary",
+      "model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "docker compose *": "ask",
+          "docker build *": "ask",
+          "docker push *": "ask",
+          "git *": "ask"
+        }
+      }
+    },
+    // Writer de documentación: escribe y mantiene docs sin ejecutar comandos
+    "docs-writer": {
+      "description": "Escribe y mantiene documentación técnica del proyecto sin ejecutar comandos del sistema.",
+      "mode": "subagent",
+      "model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
+      "temperature": 0.3,
+      "permission": {
+        "edit": "allow",
+        "bash": "deny"
+      }
     }
   },
 
   // Modelo por defecto para todas las sesiones
-  "model": "Qwen3.6-35B-A3B-4bit",
+  "model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
 
   // Lista de plugins a cargar al iniciar opencode
   "plugin": [
