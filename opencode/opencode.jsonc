@@ -154,14 +154,14 @@
         //"baseURL": "http://192.168.2.138:8080/v1"
       },
       "models": {
-        "Qwen3.8-27B-oQ4e-fp16-mtp": {
+        "KAT-Coder-V2.5-Dev-VL-oQ4e-mtp": {
           // Nombre del modelo a usar
-          "name": "Qwen3.8-27B-oQ4e-fp16-mtp",
+          "name": "KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
           "limit": {
-            // Máximo de tokens de contexto total (71.9K)
-            "context": 71680,
+            // Máximo de tokens de contexto total (75K)
+            "context": 75000,
             // Máximo de tokens de entrada (igual a context para que reserved funcione)
-            "input": 71680,
+            "input": 75000,
             // Máximo de tokens de respuesta (sincronizado con OMLX max_tokens)
             "output": 15384
           },
@@ -174,7 +174,8 @@
           "modalities": {
             // Tipos de input que acepta el modelo (solo texto)
             "input": [
-              "text"
+              "text",
+              "image"
             ],
             // Tipos de output que genera el modelo (solo texto)
             "output": [

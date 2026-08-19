@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Falling Sand Physics</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #12121a;
+    color: #c8c8d4;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  .dashboard {
+    display: flex;
+    gap: 28px;
+    align-items: flex-start;
+    padding: 32px;
+  }
+
+  .canvas-wrap {
+    border: 2px solid #2e2e3a;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0,0,0,.6), 0 0 80px rgba(85,255,51,.04);
+    flex-shrink: 0;
+  }
+
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+    width: 400px;
+    height: 400px;
+    cursor: crosshair;
+  }
+
+  .panel {
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    color: #e8e8f0;
+    border-bottom: 1px solid #2e2e3a;
+    padding-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #6a6a80;
+    margin-bottom: 8px;
+  }
+
+  .materials { display: flex; flex-direction: column; gap: 6px; }
+
+  .mat-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    background: #1e1e2a;
+    color: #c8c8d4;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+  }
+
+  .mat-btn:hover { background: #26263a; }
+  .mat-btn.active { border-color: #7c7cff; background: #26263a; }
+
+  .mat-swatch {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+
+  .slider-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .slider-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #8888a0;
+  }
+
+  .slider-group label span { color: #c8c8d4; font-weight: 600; }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #2e2e3a;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #7c7cff;
+    cursor: pointer;
+    border: 2px solid #1e1e2a;
+  }
+
+  input[type=range]::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: #7c7cff;
+    cursor: pointer;
+    border: 2px solid #1e1e2a;
+  }
+
+  .clear-btn {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #3a2a2a;
+    border-radius: 6px;
+    background: #1e1620;
+    color: #e06060;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: .5px;
+    transition: background .15s, border-color .15s;
+  }
+
+  .clear-btn:hover { background: #2a1e28; border-color: #e06060; }
+
+  .info {
+    font-size: 11px;
+    color: #4a4a60;
+    line-height: 1.5;
+    border-top: 1px solid #2e2e3a;
+    padding-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="dashboard">
+  <div class="canvas-wrap">
+    <canvas id="c" width="400" height="400"></canvas>
+  </div>
+
+  <div class="panel">
+    <h1>Falling Sand</h1>
+
+    <div>
+      <div class="section-title">Material</div>
+      <div class="materials" id="matBtns"></div>
+    </div>
+
+    <div>
+      <div class="section-title">Brush Size</div>
+      <div class="slider-group">
+        <label>Radius <span id="brushVal">3</span></label>
+        <input type="range" id="brushSize" min="1" max="12" value="3">
+      </div>
+    </div>
+
+    <button class="clear-btn" id="clearBtn">Clear Canvas</button>
+
+    <div class="info">Click &amp; drag to paint.<br>Select a material first.</div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const W = 200, H = 200;
+  const CANVAS_SIZE = 400;
+  const SCALE = CANVAS_SIZE / W;
+
+  const EMPTY = 0, SAND = 1, WATER = 2, WALL = 3, ACID = 4;
+
+  const COLORS = {
+    [EMPTY]: [30, 30, 36],
+    [SAND]:  [233, 196, 106],
+    [WATER]: [69, 123, 157],
+    [WALL]:  [108, 117, 125],
+    [ACID]:  [85, 255, 51]
+  };
+
+  let grid = new Uint8Array(W * H);
+  let current = SAND;
+  let brushRadius = 3;
+  let mouseDown = false;
+
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const imgData = ctx.createImageData(CANVAS_SIZE, CANVAS_SIZE);
+
+  function idx(x, y) { return y * W + x; }
+  function inBounds(x, y) { return x >= 0 && x < W && y >= 0 && y < H; }
+  function isEmpty(x, y) { return inBounds(x, y) && grid[idx(x, y)] === EMPTY; }
+  function getCell(x, y) { return inBounds(x, y) ? grid[idx(x, y)] : WALL; }
+  function setCell(x, y, t) { if (inBounds(x, y)) grid[idx(x, y)] = t; }
+
+  // ── UI ─────────────────────────────────────────────────────
+  const materials = [
+    { id: SAND, name: 'Sand',  color: '#e9c46a' },
+    { id: WATER, name: 'Water', color: '#457b9d' },
+    { id: WALL, name: 'Wall',  color: '#6c757d' },
+    { id: ACID, name: 'Acid',  color: '#55ff33' },
+  ];
+
+  const btnContainer = document.getElementById('matBtns');
+  materials.forEach((m, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'mat-btn' + (i === 0 ? ' active' : '');
+    btn.innerHTML = `<span class="mat-swatch" style="background:${m.color}"></span>${m.name}`;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      current = m.id;
+    });
+    btnContainer.appendChild(btn);
+  });
+
+  document.getElementById('brushSize').addEventListener('input', e => {
+    brushRadius = parseInt(e.target.value);
+    document.getElementById('brushVal').textContent = brushRadius;
+  });
+
+  document.getElementById('clearBtn').addEventListener('click', () => {
+    grid.fill(EMPTY);
+  });
+
+  // ── Mouse / Touch ──────────────────────────────────────────
+  function canvasCoords(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: Math.floor((e.clientX - r.left) / SCALE),
+      y: Math.floor((e.clientY - r.top) / SCALE)
+    };
+  }
+
+  function paint(cx, cy) {
+    const r = brushRadius;
+    for (let dy = -r; dy <= r; dy++) {
+      for (let dx = -r; dx <= r; dx++) {
+        if (dx * dx + dy * dy <= r * r) {
+          const nx = cx + dx, ny = cy + dy;
+          if (isEmpty(nx, ny)) setCell(nx, ny, current);
+        }
+      }
+    }
+  }
+
+  canvas.addEventListener('mousedown', e => { mouseDown = true; paint(...Object.values(canvasCoords(e))); });
+  canvas.addEventListener('mousemove', e => { if (mouseDown) paint(...Object.values(canvasCoords(e))); });
+  window.addEventListener('mouseup', () => { mouseDown = false; });
+
+  canvas.addEventListener('touchstart', e => {
+    e.preventDefault(); mouseDown = true;
+    const t = e.touches[0]; paint(Math.floor((t.clientX - canvas.getBoundingClientRect().left) / SCALE), Math.floor((t.clientY - canvas.getBoundingClientRect().top) / SCALE));
+  }, { passive: false });
+  canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    if (!mouseDown) return;
+    const t = e.touches[0];
+    paint(Math.floor((t.clientX - canvas.getBoundingClientRect().left) / SCALE), Math.floor((t.clientY - canvas.getBoundingClientRect().top) / SCALE));
+  }, { passive: false });
+  canvas.addEventListener('touchend', () => { mouseDown = false; });
+
+  // ── Simulation ─────────────────────────────────────────────
+  function simulate() {
+    const next = new Uint8Array(W * H);
+    next.set(grid);
+
+    for (let y = H - 1; y >= 0; y--) {
+      // Alternate scan direction per row to prevent side-bias accumulation
+      const leftToRight = (y % 2 === 0);
+      const startX = leftToRight ? 0 : W - 1;
+      const endX = leftToRight ? W : -1;
+      const stepX = leftToRight ? 1 : -1;
+
+      for (let x = startX; x !== endX; x += stepX) {
+        const cell = grid[idx(x, y)];
+        if (cell === EMPTY || cell === WALL) continue;
+
+        if (cell === SAND) {
+          if (y + 1 < H) {
+            const below = getCell(x, y + 1);
+            if (below === EMPTY) {
+              next[idx(x, y)] = EMPTY;
+              next[idx(x, y + 1)] = SAND;
+            } else if (below === WATER || below === ACID) {
+              next[idx(x, y)] = below;
+              next[idx(x, y + 1)] = SAND;
+            } else {
+              const preferLeft = Math.random() < 0.5;
+              for (const d of (preferLeft ? [-1, 1] : [1, -1])) {
+                if (isEmpty(x + d, y + 1)) {
+                  next[idx(x, y)] = EMPTY;
+                  next[idx(x + d, y + 1)] = SAND;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
+        else if (cell === WATER || cell === ACID) {
+          let moved = false;
+
+          // Fall straight down
+          if (y + 1 < H && isEmpty(x, y + 1)) {
+            next[idx(x, y)] = EMPTY;
+            next[idx(x, y + 1)] = cell;
+            moved = true;
+          }
+
+          // Slide diagonally down-left / down-right
+          if (!moved) {
+            const preferLeft = Math.random() < 0.5;
+            for (const d of (preferLeft ? [-1, 1] : [1, -1])) {
+              if (isEmpty(x + d, y + 1)) {
+                next[idx(x, y)] = EMPTY;
+                next[idx(x + d, y + 1)] = cell;
+                moved = true;
+                break;
+              }
+            }
+          }
+
+          // Spread horizontally when blocked
+          if (!moved) {
+            const preferLeft = Math.random() < 0.5;
+            for (const d of (preferLeft ? [-1, 1] : [1, -1])) {
+              if (isEmpty(x + d, y)) {
+                next[idx(x + d, y)] = cell;
+                next[idx(x, y)] = EMPTY;
+                moved = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Acid dissolution pass: after all movement, check every acid cell
+    // against its neighbours in the new grid state
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        if (next[idx(x, y)] !== ACID) continue;
+        const n = [[x-1,y],[x+1,y],[x,y-1],[x,y+1]];
+        for (const [nx, ny] of n) {
+          const nc = next[idx(nx, ny)];
+          if (nc === SAND || nc === WALL) {
+            next[idx(nx, ny)] = EMPTY;
+            next[idx(x, y)] = EMPTY;
+            break;
+          }
+        }
+      }
+    }
+
+    grid = next;
+  }
+
+  // ── Rendering ──────────────────────────────────────────────
+  function render() {
+    const data = imgData.data;
+    const bg = COLORS[EMPTY];
+    for (let i = 0; i < data.length; i += 4) {
+      data[i] = bg[0]; data[i+1] = bg[1]; data[i+2] = bg[2]; data[i+3] = 255;
+    }
+
+    for (let y = 0; y < H; y++) {
+      const sy = y * SCALE;
+      for (let x = 0; x < W; x++) {
+        const type = grid[y * W + x];
+        if (type === EMPTY) continue;
+        const c = COLORS[type];
+        const px = x * SCALE;
+        for (let by = 0; by < SCALE; by++) {
+          const rowOff = (sy + by) * CANVAS_SIZE * 4;
+          for (let bx = 0; bx < SCALE; bx++) {
+            const off = rowOff + (px + bx) * 4;
+            data[off]     = c[0];
+            data[off + 1] = c[1];
+            data[off + 2] = c[2];
+            data[off + 3] = 255;
+          }
+        }
+      }
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+  }
+
+  // ── Main Loop ──────────────────────────────────────────────
+  function loop() {
+    simulate();
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  loop();
+})();
+</script>
+</body>
+</html>

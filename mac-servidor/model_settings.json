@@ -1,11 +1,11 @@
 {
   "version": 1,
   "models": {
-    "Qwen3.8-27B-oQ4e-fp16-mtp": {
+    "KAT-Coder-V2.5-Dev-VL-oQ4e-mtp": {
       "mtp_enabled": true,
       "mtp_depth": 1,
-      "draft_model": "/Users/Shared/Qwen3.8-27B-oQ4e-fp16-mtp/Qwen3.8-27B-oQ4e-fp16-mtp",
-      "turboquant_kv_enabled": true,
+      "draft_model": "/Users/Shared/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
+      "turboquant_kv_enabled": false,
       "turboquant_kv_bits": 8
     },
     "KAT-Coder-V2.5-Dev-OptiQ-4bit": {
@@ -16,13 +16,6 @@
       "turboquant_kv_enabled": false,
       "turboquant_kv_bits": 8,
       "tool_call_parser": "qwen3_coder"
-    },
-    "Qwen3.8-27B-MTPLX-Optimized-Speed": {
-      "mtp_enabled": true,
-      "mtp_depth": 1,
-      "draft_model": "/Users/Shared/Qwen3.8-27B-MTPLX-Optimized-Speed/Qwen3.8-27B-MTPLX-Optimized-Speed",
-      "turboquant_kv_enabled": true,
-      "turboquant_kv_bits": 8
     }
   }
 }
