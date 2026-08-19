@@ -6,7 +6,9 @@
       "mtp_depth": 1,
       "draft_model": "/Users/Shared/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
       "turboquant_kv_enabled": false,
-      "turboquant_kv_bits": 8
+      "turboquant_kv_bits": 6,
+      "turboquant_kv_layer_ratio": 0.75,
+      "turboquant_kv_skip_last_layers": 1
     },
     "KAT-Coder-V2.5-Dev-OptiQ-4bit": {
       "prefill_min_chunk_tokens": 64,
