@@ -360,6 +360,20 @@
         "edit": "allow",
         "bash": "deny"
       }
+    },
+    // Investigador técnico: busca, analiza y sintetiza información de web y docs oficiales
+    "researcher": {
+      "description": "Investiga temas técnicos usando búsqueda web, docs oficiales y análisis profundo. Genera reportes estructurados sin modificar el proyecto.",
+      "mode": "subagent",
+      "model": "omlx-local/KAT-Coder-V2.5-Dev-VL-oQ4e-mtp",
+      "permission": {
+        "websearch": "allow",
+        "webfetch": "allow",
+        "read": "allow",
+        "edit": "deny",
+        "bash": "ask",
+        "task": "allow"
+      }
     }
   },
 
